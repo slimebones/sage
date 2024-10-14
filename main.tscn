@@ -14,12 +14,11 @@ offset_right = 1547.0
 offset_bottom = 1033.0
 texture = ExtResource("2_boaja")
 
-[node name="Editor" type="CodeEdit" parent="."]
+[node name="Editor" type="Label" parent="."]
 offset_left = 14.0
 offset_top = 12.0
 offset_right = 1138.0
 offset_bottom = 602.0
-placeholder_text = "Type something..."
 script = ExtResource("1_yojct")
 
 [node name="Info" type="HBoxContainer" parent="."]
