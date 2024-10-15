@@ -188,10 +188,13 @@ func _draw() -> void:
 			pos.x += tab_size
 			var after_tab_pos = pos
 
+			# Draw graphics for tabs
 			if i < tabbed_parts.size() - 1:
-				before_tab_pos.y -= str_size.y / 4
-				after_tab_pos.y -= str_size.y / 4
-				draw_dashed_line(before_tab_pos, after_tab_pos, Color.GRAY)
+				var font_height = _font.get_height(_font_size) / 4
+				before_tab_pos.y -= font_height
+				after_tab_pos.y -= font_height
+				# Disabled for now
+				# draw_dashed_line(before_tab_pos, after_tab_pos, Color.GRAY, -1, 4)
 			i += 1
 		pos.y += line_spacing
 
@@ -271,7 +274,7 @@ func _process_insert():
 	_last_pressed_keycode = -1
 
 func _physics_process(_delta: float) -> void:
-	_debug("%s" % _caret)
+	# _debug("%s" % _caret)
 	if Input.is_key_pressed(KEY_ESCAPE):
 		get_tree().quit()
 	_process_keyboard()
