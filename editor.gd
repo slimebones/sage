@@ -184,7 +184,7 @@ func _get_caret_pos() -> Vector2:
 	var caret_copy: int = _caret
 	var line_index: int = 0
 	for s in line_sizes:
-		if s >= caret_copy:
+		if s > caret_copy + 1:
 			break
 		line_index += 1
 		caret_copy -= s
@@ -231,9 +231,20 @@ func _draw() -> void:
 				# Disabled for now
 				# draw_dashed_line(before_tab_pos, after_tab_pos, Color.GRAY, -1, 4)
 			i += 1
-		line_sizes.append(line.length())
+
+		var line_size = line.length()
+		if lineno < lines.size() - 1:
+			# Count+Write newline sign
+			lines[lineno] += "\n"
+			line_size += 1
+		line_sizes.append(line_size)
+
 		pos.y += line_spacing
 		lineno += 1
+
+	if _text.ends_with("\n"):
+		lines.append("\n")
+		line_sizes.append(1)
 
 	_draw_cursor()
 
@@ -269,6 +280,9 @@ func _write(a_text: String):
 # Erase certain amount of characters. If the amount is negative, erase to the
 # left of the caret, otherwise erase to the right.
 func _erase(count: int):
+	if _caret == 0:
+		return
+
 	if count > 0:
 		_text = _text.erase(_caret, count)
 	else:
