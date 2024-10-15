@@ -12,6 +12,7 @@ offset_left = -430.0
 offset_top = -366.0
 offset_right = 1547.0
 offset_bottom = 1033.0
+scale = Vector2(0.998685, 1)
 texture = ExtResource("2_boaja")
 
 [node name="Editor" type="Control" parent="."]
@@ -37,3 +38,6 @@ text = "> YourCommand"
 [node name="Mode" type="Label" parent="Info"]
 layout_mode = 2
 text = "Normal"
+
+[node name="Debug" type="Label" parent="Info"]
+layout_mode = 2
