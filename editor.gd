@@ -121,6 +121,30 @@ const WRITABLE_KEYCODES = {
 	KEY_BRACKETLEFT: ["[", "{"],
 	KEY_BRACERIGHT: ["]", "}"],
 	KEY_BACKSLASH: ["\\", "|"],
+
+	KEY_A: ["a", "A"],
+	KEY_S: ["s", "S"],
+	KEY_D: ["d", "D"],
+	KEY_F: ["f", "F"],
+	KEY_G: ["g", "G"],
+	KEY_H: ["h", "H"],
+	KEY_J: ["j", "J"],
+	KEY_K: ["k", "K"],
+	KEY_L: ["l", "L"],
+	KEY_SEMICOLON: [";", ":"],
+	KEY_APOSTROPHE: ["'", "\""],
+	KEY_ENTER: ["\n", "\n"],
+
+	KEY_Z: ["z", "Z"],
+	KEY_X: ["x", "X"],
+	KEY_C: ["c", "C"],
+	KEY_V: ["v", "V"],
+	KEY_B: ["b", "B"],
+	KEY_N: ["n", "N"],
+	KEY_M: ["m", "M"],
+	KEY_COMMA: [",", "<"],
+	KEY_PERIOD: [".", ">"],
+	KEY_SLASH: ["/", "?"],
 }
 
 func _ready() -> void:
