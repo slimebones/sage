@@ -31,11 +31,13 @@ enum IndentMode {
 	Space,
 }
 var indent_mode: IndentMode = IndentMode.Tab
-# Actual only for IndentMode.Tab
-var tab_size: int = 10
+# How much pixels to use for a tab
+var tab_size: int = 40
 # Actual only for IndentMode.Space. How many spaces are inserted per tab.
 var space_indent_amount: int = 4
 
+# We don't have SHIFT, CTRL and ALT here, since we use them in various
+# combinations.
 const KEYCODES = [
 	KEY_ESCAPE,
 
@@ -95,7 +97,6 @@ const KEYCODES = [
 	KEY_APOSTROPHE,
 	KEY_ENTER,
 
-	KEY_SHIFT,
 	KEY_Z,
 	KEY_X,
 	KEY_C,
@@ -107,8 +108,6 @@ const KEYCODES = [
 	KEY_PERIOD,
 	KEY_SLASH,
 
-	KEY_CTRL,
-	KEY_ALT,
 	KEY_SPACE,
 ]
 const WRITABLE_KEYCODES = {
@@ -177,7 +176,23 @@ func _draw() -> void:
 	var lines = _text.split("\n")
 	var pos = Vector2.ZERO
 	for line in lines:
-		draw_string(_font, pos, line, HORIZONTAL_ALIGNMENT_LEFT, -1, _font_size)
+		var tabbed_parts = line.split("\t")
+		pos.x = 0
+		var i = 0
+		for part in tabbed_parts:
+			draw_string(_font, pos, part, HORIZONTAL_ALIGNMENT_LEFT, -1, _font_size)
+
+			var str_size = _font.get_string_size(part, HORIZONTAL_ALIGNMENT_LEFT, -1, _font_size)
+			pos.x += str_size.x
+			var before_tab_pos = pos
+			pos.x += tab_size
+			var after_tab_pos = pos
+
+			if i < tabbed_parts.size() - 1:
+				before_tab_pos.y -= str_size.y / 4
+				after_tab_pos.y -= str_size.y / 4
+				draw_dashed_line(before_tab_pos, after_tab_pos, Color.GRAY)
+			i += 1
 		pos.y += line_spacing
 
 func _get_mode_str():
@@ -200,6 +215,11 @@ func _move_caret(offset: int):
 
 # Write at current caret position.
 func _write(a_text: String):
+	if indent_mode == IndentMode.Space:
+		var space_chunk = ""
+		for _i in range(space_indent_amount):
+			space_chunk += " "
+		a_text = a_text.replace("\t", space_chunk)
 	_text += a_text
 	_move_caret(a_text.length())
 	queue_redraw()
