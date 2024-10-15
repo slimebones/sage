@@ -23,9 +23,9 @@ texture = ExtResource("2_boaja")
 [node name="Editor" type="Control" parent="."]
 layout_mode = 3
 anchors_preset = 0
-offset_left = 15.0
+offset_left = 38.0
 offset_top = 25.0
-offset_right = 1139.0
+offset_right = 1115.0
 offset_bottom = 592.0
 script = ExtResource("1_yojct")
 

@@ -7,35 +7,6 @@ enum Mode {
 	Cmd,
 }
 
-var _mode = Mode.Insert
-var _is_shift_pressed: bool = false
-var _is_ctrl_pressed: bool = false
-var _is_alt_pressed: bool = false
-var _last_written_keycode: int = -1
-var _last_pressed_keycode: int = -1
-var _last_inp_time: int = 0
-var _same_inp_delay: int = 100
-var _font_size: int = 32
-
-var _text: String = ""
-# Index of which the caret are positioned right now.
-var _caret: int = 0
-
-@onready var _mode_text = core.find("Info/Mode")
-@onready var _debug_text = core.find("Info/Debug")
-@onready var _font = preload("res://assets/monogram.ttf")
-var line_spacing: float = 20
-
-enum IndentMode {
-	Tab,
-	Space,
-}
-var indent_mode: IndentMode = IndentMode.Tab
-# How much pixels to use for a tab
-var tab_size: int = 40
-# Actual only for IndentMode.Space. How many spaces are inserted per tab.
-var space_indent_amount: int = 4
-
 # We don't have SHIFT, CTRL and ALT here, since we use them in various
 # combinations.
 const KEYCODES = [
@@ -169,20 +140,84 @@ const WRITABLE_KEYCODES = {
 	KEY_SPACE: [" ", " "],
 }
 
+var _mode = Mode.Insert
+var _is_shift_pressed: bool = false
+var _is_ctrl_pressed: bool = false
+var _is_alt_pressed: bool = false
+var _last_written_keycode: int = -1
+var _last_pressed_keycode: int = -1
+var _last_inp_time: int = 0
+var _same_inp_delay: int = 100
+var _font_size: int = 32
+
+var _text: String = ""
+# Index of which the caret are positioned right now.
+var _caret: int = 0
+
+@onready var _mode_text = core.find("Info/Mode")
+@onready var _debug_text = core.find("Info/Debug")
+@onready var _font = preload("res://assets/monogram.ttf")
+var line_spacing: float = 20
+
+enum IndentMode {
+	Tab,
+	Space,
+}
+var indent_mode: IndentMode = IndentMode.Tab
+# How many pixels to use for a tab
+var tab_size: float = 40
+# Actual only for IndentMode.Space. How many spaces are inserted per tab.
+var space_indent_amount: int = 4
+
+var line_number_right_margin: float = 50
+var lines: PackedStringArray = []
+var line_sizes: PackedInt64Array = []
+
 func _ready() -> void:
 	_mode_text.text = _get_mode_str()
 
+## Draws cursor at caret position.
+func _draw_cursor():
+	_get_caret_pos()
+
+func _get_caret_pos() -> Vector2:
+	var caret_copy: int = _caret
+	var line_index: int = 0
+	for s in line_sizes:
+		if s >= caret_copy:
+			break
+		line_index += 1
+		caret_copy -= s
+
+	# var caret_line = lines[line_index]
+	print(line_index)
+	return Vector2.ZERO
+
 func _draw() -> void:
-	var lines = _text.split("\n")
+	lines = _text.split("\n")
 	var pos = Vector2.ZERO
+	var lineno = 1
+	line_sizes = []
 	for line in lines:
+		draw_string(
+			_font,
+			Vector2(
+				0 - _font.get_string_size(String.num_uint64(lineno)).x, pos.y),
+			"%d" % lineno,
+			HORIZONTAL_ALIGNMENT_CENTER,
+			-1,
+			_font_size,
+			Color(1, 1, 1, 0.25)
+		)
 		var tabbed_parts = line.split("\t")
-		pos.x = 0
+		pos.x = line_number_right_margin
 		var i = 0
 		for part in tabbed_parts:
-			draw_string(_font, pos, part, HORIZONTAL_ALIGNMENT_LEFT, -1, _font_size)
+			draw_string(_font, pos, part, HORIZONTAL_ALIGNMENT_CENTER, -1, _font_size)
 
-			var str_size = _font.get_string_size(part, HORIZONTAL_ALIGNMENT_LEFT, -1, _font_size)
+			var str_size = _font.get_string_size(
+				part, HORIZONTAL_ALIGNMENT_CENTER, -1, _font_size
+			)
 			pos.x += str_size.x
 			var before_tab_pos = pos
 			pos.x += tab_size
@@ -196,7 +231,11 @@ func _draw() -> void:
 				# Disabled for now
 				# draw_dashed_line(before_tab_pos, after_tab_pos, Color.GRAY, -1, 4)
 			i += 1
+		line_sizes.append(line.length())
 		pos.y += line_spacing
+		lineno += 1
+
+	_draw_cursor()
 
 func _get_mode_str():
 	match _mode:
@@ -274,7 +313,7 @@ func _process_insert():
 	_last_pressed_keycode = -1
 
 func _physics_process(_delta: float) -> void:
-	# _debug("%s" % _caret)
+	_debug("%s" % _caret)
 	if Input.is_key_pressed(KEY_ESCAPE):
 		get_tree().quit()
 	_process_keyboard()
