@@ -146,7 +146,7 @@ class Layout:
 	var up: int = KEY_L
 	var right: int = KEY_SEMICOLON
 
-	var toggle_cmd_mode: int = KEY_TAB
+	var toggle_cmd_mode: int = KEY_ENTER
 	var toggle_visual_mode: int = KEY_V
 	# This key will be used in combination with ALT to escape the insert mode
 	var escape_insert_mode: int = KEY_I
@@ -158,11 +158,11 @@ class Settings:
 
 var settings: Settings = Settings.new()
 
-var _mode = Mode.Insert
+var _mode = Mode.Normal
 var _is_shift_pressed: bool = false
 var _is_ctrl_pressed: bool = false
 var _is_alt_pressed: bool = false
-var _last_buffer_written_keycode: int = -1
+var _last_processed_keycode: int = -1
 var _last_pressed_keycode: int = -1
 var _last_inp_time: int = 0
 var _same_inp_delay: int = 100
@@ -305,6 +305,8 @@ enum WriteTarget {
 	CmdField,
 }
 
+var _cmd_field_text: String = ""
+
 # Write at current caret position.
 func _write(a_text: String, target: WriteTarget):
 	if indent_mode == IndentMode.Space:
@@ -317,22 +319,27 @@ func _write(a_text: String, target: WriteTarget):
 		_move_caret(a_text.length())
 		queue_redraw()
 	elif target == WriteTarget.CmdField:
-		_cmd_text.text += a_text
+		_cmd_field_text += a_text
+		_cmd_text.text = "> %s" % _cmd_field_text
 
 # Erase certain amount of characters. If the amount is negative, erase to the
 # left of the caret, otherwise erase to the right.
-func _erase(count: int):
-	if _caret == 0:
-		return
+func _erase(count: int, target: WriteTarget):
+	if target == WriteTarget.Buffer:
+		if _caret == 0:
+			return
 
-	if count > 0:
-		_buffer_text = _buffer_text.erase(_caret, count)
-	else:
-		# We can erase only by positive count, so we move caret to the left by
-		# the required amount, and only then erase.
-		_buffer_text = _buffer_text.erase(_caret + count, abs(count))
-	_move_caret(count)
-	queue_redraw()
+		if count > 0:
+			_buffer_text = _buffer_text.erase(_caret, count)
+		else:
+			# We can erase only by positive count, so we move caret to the left by
+			# the required amount, and only then erase.
+			_buffer_text = _buffer_text.erase(_caret + count, abs(count))
+		_move_caret(count)
+		queue_redraw()
+	elif target == WriteTarget.CmdField:
+		_cmd_field_text = _cmd_field_text.substr(0, _cmd_field_text.length() - 1)
+		_cmd_text.text = "> %s" % _cmd_field_text
 
 func _debug(a_text: String):
 	_debug_text.text = a_text
@@ -355,7 +362,7 @@ func _process_insert():
 		return
 
 	if _last_pressed_keycode == KEY_BACKSPACE:
-		_erase(-1)
+		_erase(-1, WriteTarget.Buffer)
 	elif _last_pressed_keycode == settings.layout.escape_insert_mode && _is_alt_pressed:
 		_mode = Mode.Cmd
 	else:
@@ -366,13 +373,22 @@ func _process_insert():
 			c = WRITABLE_KEYCODES[_last_pressed_keycode][0]
 		_write(c, WriteTarget.Buffer)
 	_last_inp_time = core.time()
-	_last_buffer_written_keycode = _last_pressed_keycode
+	_last_processed_keycode = _last_pressed_keycode
 	_last_pressed_keycode = -1
 
 func _process_normal():
 	if _last_pressed_keycode == settings.layout.toggle_cmd_mode:
 		_mode = Mode.Cmd
+		_cmd_text.text = "> "
 		_cmd_text.visible = true
+		_mode_text.visible = false
+	elif _last_pressed_keycode == settings.layout.enable_prepend_mode:
+		_mode = Mode.Insert
+	elif _last_pressed_keycode == settings.layout.enable_append_mode:
+		_mode = Mode.Insert
+		_move_caret(1)
+	_last_inp_time = core.time()
+	_last_processed_keycode = _last_pressed_keycode
 	_last_pressed_keycode = -1
 
 func _exe_cmd(cmd: String):
@@ -381,11 +397,13 @@ func _exe_cmd(cmd: String):
 func _process_cmd():
 	if _last_pressed_keycode == settings.layout.toggle_cmd_mode:
 		_mode = Mode.Normal
-		_exe_cmd(_cmd_text.text)
+		_exe_cmd(_cmd_field_text)
 		_cmd_text.visible = false
+		_mode_text.visible = true
+		_cmd_field_text = ""
 		_cmd_text.text = ""
 	elif _last_pressed_keycode == KEY_BACKSPACE:
-		_erase(-1)
+		_erase(-1, WriteTarget.CmdField)
 	else:
 		var c = ""
 		if _is_shift_pressed:
@@ -394,6 +412,7 @@ func _process_cmd():
 			c = WRITABLE_KEYCODES[_last_pressed_keycode][0]
 		_write(c, WriteTarget.CmdField)
 	_last_inp_time = core.time()
+	_last_processed_keycode = _last_pressed_keycode
 	_last_pressed_keycode = -1
 
 func _process_visual():
@@ -403,9 +422,10 @@ func _physics_process(_delta: float) -> void:
 	# _debug("%s" % _caret)
 	if Input.is_key_pressed(KEY_ESCAPE):
 		get_tree().quit()
+		return
 	_process_keyboard()
 	# Prevent too fast input handling
-	if _last_pressed_keycode == _last_buffer_written_keycode && core.is_cooldown(_last_inp_time, _same_inp_delay):
+	if _last_pressed_keycode == -1 || (_last_pressed_keycode == _last_processed_keycode && core.is_cooldown(_last_inp_time, _same_inp_delay)):
 		_last_pressed_keycode = -1
 		return
 	match _mode:

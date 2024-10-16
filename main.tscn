@@ -38,7 +38,6 @@ offset_bottom = 635.0
 [node name="Cmd" type="Label" parent="Info"]
 visible = false
 layout_mode = 2
-text = "> YourCommand"
 label_settings = SubResource("LabelSettings_dafbl")
 
 [node name="Mode" type="Label" parent="Info"]
