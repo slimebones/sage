@@ -172,43 +172,62 @@ var space_indent_amount: int = 4
 var line_number_right_margin: float = 50
 var lines: PackedStringArray = []
 var line_sizes: PackedInt64Array = []
+var line_y_poses: PackedFloat64Array = []
+var cursor_height: float = 20
 
 func _ready() -> void:
 	_mode_text.text = _get_mode_str()
 
 ## Draws cursor at caret position.
 func _draw_cursor():
-	_get_caret_pos()
+	var caret_pos = _get_caret_pos()
+	var caret_upper_pos = caret_pos
+	caret_upper_pos.y -= cursor_height
+	draw_line(caret_pos, caret_upper_pos, Color.WHITE)
 
 func _get_caret_pos() -> Vector2:
 	var caret_copy: int = _caret
 	var line_index: int = 0
 	for s in line_sizes:
-		if s > caret_copy + 1:
+		if caret_copy <= s:
+			if lines[line_index].ends_with("\n"):
+				line_index += 1
+				caret_copy = 0
+				break
 			break
-		line_index += 1
 		caret_copy -= s
+		line_index += 1
 
-	# var caret_line = lines[line_index]
-	print(line_index)
-	return Vector2.ZERO
+	var caret_line = lines[line_index]
+	var caret_line_x = line_number_right_margin + _font.get_string_size(caret_line.substr(0, caret_copy), HORIZONTAL_ALIGNMENT_LEFT, -1, _font_size).x
+	var caret_line_y = line_y_poses[line_index]
+	return Vector2(
+		caret_line_x,
+		caret_line_y
+	)
 
 func _draw() -> void:
 	lines = _text.split("\n")
-	var pos = Vector2.ZERO
+	var pos = Vector2(0, line_spacing)
 	var lineno = 1
 	line_sizes = []
+	line_y_poses = []
 	for line in lines:
 		draw_string(
 			_font,
 			Vector2(
-				0 - _font.get_string_size(String.num_uint64(lineno)).x, pos.y),
+				0 - _font.get_string_size(
+					String.num_uint64(lineno), HORIZONTAL_ALIGNMENT_LEFT, -1, _font_size
+				).x,
+				pos.y
+			),
 			"%d" % lineno,
 			HORIZONTAL_ALIGNMENT_CENTER,
 			-1,
 			_font_size,
 			Color(1, 1, 1, 0.25)
 		)
+		line_y_poses.append(pos.y)
 		var tabbed_parts = line.split("\t")
 		pos.x = line_number_right_margin
 		var i = 0
@@ -233,18 +252,14 @@ func _draw() -> void:
 			i += 1
 
 		var line_size = line.length()
-		if lineno < lines.size() - 1:
+		if lineno < lines.size():
 			# Count+Write newline sign
-			lines[lineno] += "\n"
+			lines[lineno - 1] += "\n"
 			line_size += 1
 		line_sizes.append(line_size)
 
 		pos.y += line_spacing
 		lineno += 1
-
-	if _text.ends_with("\n"):
-		lines.append("\n")
-		line_sizes.append(1)
 
 	_draw_cursor()
 
