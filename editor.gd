@@ -173,6 +173,7 @@ var _buffer_text: String = ""
 var _caret: int = 0
 
 @onready var _mode_text = core.find("Info/Mode")
+@onready var _cmd_text = core.find("Info/Cmd")
 @onready var _debug_text = core.find("Info/Debug")
 @onready var _font = preload("res://assets/monogram.ttf")
 var line_spacing: float = 20
@@ -303,7 +304,6 @@ enum WriteTarget {
 	Buffer,
 	CmdField,
 }
-var _cmd_field_text: String = ""
 
 # Write at current caret position.
 func _write(a_text: String, target: WriteTarget):
@@ -317,7 +317,7 @@ func _write(a_text: String, target: WriteTarget):
 		_move_caret(a_text.length())
 		queue_redraw()
 	elif target == WriteTarget.CmdField:
-		_cmd_field_text += a_text
+		_cmd_text.text += a_text
 
 # Erase certain amount of characters. If the amount is negative, erase to the
 # left of the caret, otherwise erase to the right.
@@ -372,6 +372,7 @@ func _process_insert():
 func _process_normal():
 	if _last_pressed_keycode == settings.layout.toggle_cmd_mode:
 		_mode = Mode.Cmd
+		_cmd_text.visible = true
 	_last_pressed_keycode = -1
 
 func _exe_cmd(cmd: String):
@@ -380,8 +381,9 @@ func _exe_cmd(cmd: String):
 func _process_cmd():
 	if _last_pressed_keycode == settings.layout.toggle_cmd_mode:
 		_mode = Mode.Normal
-		_exe_cmd(_cmd_field_text)
-		_cmd_field_text = ""
+		_exe_cmd(_cmd_text.text)
+		_cmd_text.visible = false
+		_cmd_text.text = ""
 	elif _last_pressed_keycode == KEY_BACKSPACE:
 		_erase(-1)
 	else:
