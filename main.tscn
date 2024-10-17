@@ -32,8 +32,8 @@ script = ExtResource("1_yojct")
 [node name="Info" type="HBoxContainer" parent="."]
 offset_left = 29.0
 offset_top = 612.0
-offset_right = 1139.0
-offset_bottom = 635.0
+offset_right = 602.0
+offset_bottom = 638.0
 
 [node name="Cmd" type="Label" parent="Info"]
 visible = false
@@ -48,3 +48,9 @@ label_settings = SubResource("LabelSettings_dafbl")
 [node name="Debug" type="Label" parent="Info"]
 layout_mode = 2
 label_settings = SubResource("LabelSettings_dafbl")
+
+[node name="CaretText" type="Label" parent="."]
+offset_left = 1087.0
+offset_top = 611.0
+offset_right = 1127.0
+offset_bottom = 634.0

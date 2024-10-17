@@ -171,6 +171,7 @@ var _caret: Vector2i = Vector2i.ZERO
 @onready var _cmd_text = core.find("Info/Cmd")
 @onready var _debug_text = core.find("Info/Debug")
 @onready var _font = preload("res://assets/monogram.ttf")
+@onready var _caret_text = core.find("CaretText")
 var line_spacing: float = 20
 
 enum IndentMode {
@@ -184,7 +185,7 @@ var tab_size: float = 40
 var space_indent_amount: int = 4
 
 var line_number_right_margin: float = 50
-var lines: PackedStringArray = []
+var lines: PackedStringArray = [""]
 var line_sizes: PackedInt64Array = []
 var line_y_poses: PackedFloat64Array = []
 var normal_cursor_size: Vector2 = Vector2(10, -20)
@@ -209,7 +210,7 @@ func _draw_cursor():
 		draw_rect(rect, Color.WHITE)
 
 func _get_caret_pos() -> Vector2:
-	var caret_line = lines[_caret.y]
+	var caret_line = _get_caret_line()
 	var caret_line_x = \
 		line_number_right_margin \
 		+ _font.get_string_size(
@@ -302,6 +303,8 @@ func _move_caret(x: int, y: int):
 
 	if _caret.y > lines.size() - 1:
 		_caret.y = lines.size() - 1
+	# If caret moves to new line, the X position will always be at the end,
+	# if overflown
 	if _caret.x > lines[_caret.y].length():
 		_caret.x = lines[_caret.y].length()
 
@@ -325,7 +328,7 @@ func _write(c: String, target: WriteTarget):
 		c = c.replace("\t", space_chunk)
 
 	if target == WriteTarget.Buffer:
-		lines[_caret.y] = lines[_caret.y].insert(_caret.x, c)
+		_set_caret_line(lines[_caret.y].insert(_caret.x, c))
 		_move_caret(1, 0)
 		if c == "\n":
 			lines.append("")
@@ -351,6 +354,10 @@ func _erase_left_char(target: WriteTarget):
 		if _get_caret_line().length() == 0:
 			lines.remove_at(_caret.y)
 			_move_caret(0, -1)
+			# Put caret to the end of the previous line upon erasing the old
+			# one
+			_caret.x = _get_caret_line().length()
+			queue_redraw()
 			return
 		# We can erase only by positive count, so we move caret to the left by
 		# the required amount, and only then erase.
@@ -436,7 +443,7 @@ func _process_visual():
 	pass
 
 func _physics_process(_delta: float) -> void:
-	# _debug("%s" % _caret)
+	_caret_text.text = "(%d,%d)" % [_caret.x, _caret.y]
 	if Input.is_key_pressed(KEY_ESCAPE):
 		get_tree().quit()
 		return
