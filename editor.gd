@@ -148,17 +148,14 @@ class Layout:
 
 	var toggle_cmd_mode: int = KEY_ENTER
 	var toggle_visual_mode: int = KEY_V
-	# This key will be used in combination with ALT to escape the insert mode
-	var escape_insert_mode: int = KEY_I
-	var enable_prepend_mode: int = KEY_I
-	var enable_append_mode: int = KEY_A
+	var enable_insert_mode: int = KEY_I
 
 class Settings:
 	var layout: Layout = Layout.new()
 
 var settings: Settings = Settings.new()
 
-var _mode = Mode.Normal
+var _mode: Mode
 var _is_shift_pressed: bool = false
 var _is_ctrl_pressed: bool = false
 var _is_alt_pressed: bool = false
@@ -169,8 +166,7 @@ var _same_inp_delay: int = 100
 var _font_size: int = 32
 
 var _buffer_text: String = ""
-# Index of which the caret are positioned right now.
-var _caret: int = 0
+var _caret: Vector2i = Vector2i.ZERO
 
 @onready var _mode_text = core.find("Info/Mode")
 @onready var _cmd_text = core.find("Info/Cmd")
@@ -192,34 +188,38 @@ var line_number_right_margin: float = 50
 var lines: PackedStringArray = []
 var line_sizes: PackedInt64Array = []
 var line_y_poses: PackedFloat64Array = []
-var cursor_height: float = 20
+var normal_cursor_size: Vector2 = Vector2(10, -20)
+var insert_cursor_size: Vector2 = Vector2(1, -20)
 
 func _ready() -> void:
+	_set_mode(Mode.Normal)
+
+func _set_mode(a_mode: Mode):
+	_mode = a_mode
 	_mode_text.text = _get_mode_str()
+	queue_redraw()
 
 ## Draws cursor at caret position.
 func _draw_cursor():
 	var caret_pos = _get_caret_pos()
-	var caret_upper_pos = caret_pos
-	caret_upper_pos.y -= cursor_height
-	draw_line(caret_pos, caret_upper_pos, Color.WHITE)
+	if _mode == Mode.Insert:
+		var rect: Rect2 = Rect2(caret_pos, insert_cursor_size)
+		draw_rect(rect, Color.WHITE)
+	elif _mode == Mode.Normal:
+		var rect: Rect2 = Rect2(caret_pos, normal_cursor_size)
+		draw_rect(rect, Color.WHITE)
 
 func _get_caret_pos() -> Vector2:
-	var caret_copy: int = _caret
-	var line_index: int = 0
-	for s in line_sizes:
-		if caret_copy <= s:
-			if lines[line_index].ends_with("\n"):
-				line_index += 1
-				caret_copy = 0
-				break
-			break
-		caret_copy -= s
-		line_index += 1
-
-	var caret_line = lines[line_index]
-	var caret_line_x = line_number_right_margin + _font.get_string_size(caret_line.substr(0, caret_copy), HORIZONTAL_ALIGNMENT_LEFT, -1, _font_size).x
-	var caret_line_y = line_y_poses[line_index]
+	var caret_line = lines[_caret.y]
+	var caret_line_x = \
+		line_number_right_margin \
+		+ _font.get_string_size(
+			caret_line.substr(0, _caret.x),
+			HORIZONTAL_ALIGNMENT_LEFT,
+			-1,
+			_font_size
+		).x
+	var caret_line_y = line_y_poses[_caret.y]
 	return Vector2(
 		caret_line_x,
 		caret_line_y
@@ -293,8 +293,9 @@ func _get_mode_str():
 		Mode.Cmd:
 			return "Command"
 
-func _move_caret(offset: int):
+func _move_caret(offset: Vector2i):
 	_caret += offset
+
 	if _caret < 0:
 		_caret = 0
 	elif _caret > _buffer_text.length():
@@ -314,8 +315,9 @@ func _write(a_text: String, target: WriteTarget):
 		for _i in range(space_indent_amount):
 			space_chunk += " "
 		a_text = a_text.replace("\t", space_chunk)
+
 	if target == WriteTarget.Buffer:
-		_buffer_text += a_text
+		_buffer_text = _buffer_text.insert(_caret, a_text)
 		_move_caret(a_text.length())
 		queue_redraw()
 	elif target == WriteTarget.CmdField:
@@ -363,8 +365,6 @@ func _process_insert():
 
 	if _last_pressed_keycode == KEY_BACKSPACE:
 		_erase(-1, WriteTarget.Buffer)
-	elif _last_pressed_keycode == settings.layout.escape_insert_mode && _is_alt_pressed:
-		_mode = Mode.Cmd
 	else:
 		var c = ""
 		if _is_shift_pressed:
@@ -378,15 +378,14 @@ func _process_insert():
 
 func _process_normal():
 	if _last_pressed_keycode == settings.layout.toggle_cmd_mode:
-		_mode = Mode.Cmd
+		_set_mode(Mode.Cmd)
 		_cmd_text.text = "> "
 		_cmd_text.visible = true
 		_mode_text.visible = false
-	elif _last_pressed_keycode == settings.layout.enable_prepend_mode:
-		_mode = Mode.Insert
-	elif _last_pressed_keycode == settings.layout.enable_append_mode:
-		_mode = Mode.Insert
-		_move_caret(1)
+	elif _last_pressed_keycode == settings.layout.enable_insert_mode:
+		_set_mode(Mode.Insert)
+	elif _last_pressed_keycode == settings.layout.up:
+		_move_caret(Vector2i(0, -1))
 	_last_inp_time = core.time()
 	_last_processed_keycode = _last_pressed_keycode
 	_last_pressed_keycode = -1
@@ -396,7 +395,7 @@ func _exe_cmd(cmd: String):
 
 func _process_cmd():
 	if _last_pressed_keycode == settings.layout.toggle_cmd_mode:
-		_mode = Mode.Normal
+		_set_mode(Mode.Normal)
 		_exe_cmd(_cmd_field_text)
 		_cmd_text.visible = false
 		_mode_text.visible = true
@@ -424,6 +423,11 @@ func _physics_process(_delta: float) -> void:
 		get_tree().quit()
 		return
 	_process_keyboard()
+
+	if _mode == Mode.Insert && _is_alt_pressed:
+		_set_mode(Mode.Normal)
+		return
+
 	# Prevent too fast input handling
 	if _last_pressed_keycode == -1 || (_last_pressed_keycode == _last_processed_keycode && core.is_cooldown(_last_inp_time, _same_inp_delay)):
 		_last_pressed_keycode = -1
