@@ -165,7 +165,6 @@ var _last_inp_time: int = 0
 var _same_inp_delay: int = 100
 var _font_size: int = 32
 
-var _buffer_text: String = ""
 var _caret: Vector2i = Vector2i.ZERO
 
 @onready var _mode_text = core.find("Info/Mode")
@@ -226,7 +225,6 @@ func _get_caret_pos() -> Vector2:
 	)
 
 func _draw() -> void:
-	lines = _buffer_text.split("\n")
 	var pos = Vector2(0, line_spacing)
 	var lineno = 1
 	line_sizes = []
@@ -293,7 +291,8 @@ func _get_mode_str():
 		Mode.Cmd:
 			return "Command"
 
-func _move_caret(offset: Vector2i):
+func _move_caret(x: int, y: int):
+	var offset = Vector2i(x, y)
 	_caret += offset
 
 	if _caret.x < 0:
@@ -314,35 +313,49 @@ enum WriteTarget {
 var _cmd_field_text: String = ""
 
 # Write at current caret position.
-func _write(a_text: String, target: WriteTarget):
+func _write(c: String, target: WriteTarget):
+	assert(c.length() <= 1)
+	if c == "":
+		return
+
 	if indent_mode == IndentMode.Space:
 		var space_chunk = ""
 		for _i in range(space_indent_amount):
 			space_chunk += " "
-		a_text = a_text.replace("\t", space_chunk)
+		c = c.replace("\t", space_chunk)
 
 	if target == WriteTarget.Buffer:
-		_buffer_text = _buffer_text.insert(_caret, a_text)
-		_move_caret(a_text.length())
+		lines[_caret.y] = lines[_caret.y].insert(_caret.x, c)
+		_move_caret(1, 0)
+		if c == "\n":
+			lines.append("")
+			_move_caret(0, 1)
 		queue_redraw()
 	elif target == WriteTarget.CmdField:
-		_cmd_field_text += a_text
+		_cmd_field_text += c
 		_cmd_text.text = "> %s" % _cmd_field_text
+
+func _get_caret_line() -> String:
+	return lines[_caret.y]
+
+func _set_caret_line(s: String):
+	lines[_caret.y] = s
 
 # Erase certain amount of characters. If the amount is negative, erase to the
 # left of the caret, otherwise erase to the right.
-func _erase(count: int, target: WriteTarget):
+func _erase_left_char(target: WriteTarget):
 	if target == WriteTarget.Buffer:
-		if _caret == 0:
+		if _caret == Vector2i.ZERO:
 			return
 
-		if count > 0:
-			_buffer_text = _buffer_text.erase(_caret, count)
-		else:
-			# We can erase only by positive count, so we move caret to the left by
-			# the required amount, and only then erase.
-			_buffer_text = _buffer_text.erase(_caret + count, abs(count))
-		_move_caret(count)
+		if _get_caret_line().length() == 0:
+			lines.remove_at(_caret.y)
+			_move_caret(0, -1)
+			return
+		# We can erase only by positive count, so we move caret to the left by
+		# the required amount, and only then erase.
+		_move_caret(-1, 0)
+		_set_caret_line(_get_caret_line().erase(_caret.x, 1))
 		queue_redraw()
 	elif target == WriteTarget.CmdField:
 		_cmd_field_text = _cmd_field_text.substr(0, _cmd_field_text.length() - 1)
@@ -369,7 +382,7 @@ func _process_insert():
 		return
 
 	if _last_pressed_keycode == KEY_BACKSPACE:
-		_erase(-1, WriteTarget.Buffer)
+		_erase_left_char(WriteTarget.Buffer)
 	else:
 		var c = ""
 		if _is_shift_pressed:
@@ -390,7 +403,7 @@ func _process_normal():
 	elif _last_pressed_keycode == settings.layout.enable_insert_mode:
 		_set_mode(Mode.Insert)
 	elif _last_pressed_keycode == settings.layout.up:
-		_move_caret(Vector2i(0, -1))
+		_move_caret(0, -1)
 	_last_inp_time = core.time()
 	_last_processed_keycode = _last_pressed_keycode
 	_last_pressed_keycode = -1
@@ -407,7 +420,7 @@ func _process_cmd():
 		_cmd_field_text = ""
 		_cmd_text.text = ""
 	elif _last_pressed_keycode == KEY_BACKSPACE:
-		_erase(-1, WriteTarget.CmdField)
+		_erase_left_char(WriteTarget.CmdField)
 	else:
 		var c = ""
 		if _is_shift_pressed:
