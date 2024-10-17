@@ -296,10 +296,15 @@ func _get_mode_str():
 func _move_caret(offset: Vector2i):
 	_caret += offset
 
-	if _caret < 0:
-		_caret = 0
-	elif _caret > _buffer_text.length():
-		_caret = _buffer_text.length() - 1
+	if _caret.x < 0:
+		_caret.x = 0
+	if _caret.y < 0:
+		_caret.y = 0
+
+	if _caret.y > lines.size() - 1:
+		_caret.y = lines.size() - 1
+	if _caret.x > lines[_caret.y].length():
+		_caret.x = lines[_caret.y].length()
 
 enum WriteTarget {
 	Buffer,
