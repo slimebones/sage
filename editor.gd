@@ -140,20 +140,62 @@ const WRITABLE_KEYCODES = {
 	KEY_SPACE: [" ", " "],
 }
 
-class Layout:
-	var left: int = KEY_H
-	var down: int = KEY_K
-	var up: int = KEY_L
-	var right: int = KEY_SEMICOLON
+class FollowingKeychain:
+	var following: Array
+	var cmd: StringName
 
+	func _init(f: Array, c: StringName):
+		following = f
+		cmd = c
+
+class Layout:
 	var toggle_cmd_mode: int = KEY_ENTER
 	var toggle_visual_mode: int = KEY_V
 	var enable_insert_mode: int = KEY_I
+
+	# Binds that invoke commands. Works only in normal mode
+	var cmd_binds = {
+		KEY_H: [
+			FollowingKeychain.new(
+				[],
+				"left"
+			),
+		],
+		KEY_K: [
+			FollowingKeychain.new(
+				[],
+				"down"
+			),
+		],
+		KEY_L: [
+			FollowingKeychain.new(
+				[],
+				"up"
+			),
+		],
+		KEY_SEMICOLON: [
+			FollowingKeychain.new(
+				[],
+				"right"
+			),
+		],
+		KEY_SPACE: [
+			FollowingKeychain.new(
+				[KEY_O],
+				"open"
+			),
+		],
+	}
 
 class Settings:
 	var layout: Layout = Layout.new()
 
 var settings: Settings = Settings.new()
+
+# !!
+var _is_keychain_started = false
+# Which keys are available to continue the combination
+var _next_possible_keychains: Array = []
 
 var _mode: Mode
 var _is_shift_pressed: bool = false
@@ -193,6 +235,7 @@ var insert_cursor_size: Vector2 = Vector2(1, -20)
 
 func _ready() -> void:
 	_set_mode(Mode.Normal)
+	_next_possible_keys = settings.layout.cmd_binds.keys()
 
 func _set_mode(a_mode: Mode):
 	_mode = a_mode
@@ -409,8 +452,7 @@ func _process_normal():
 		_mode_text.visible = false
 	elif _last_pressed_keycode == settings.layout.enable_insert_mode:
 		_set_mode(Mode.Insert)
-	elif _last_pressed_keycode == settings.layout.up:
-		_move_caret(0, -1)
+	elif _next_possible_keys.has(
 	_last_inp_time = core.time()
 	_last_processed_keycode = _last_pressed_keycode
 	_last_pressed_keycode = -1
