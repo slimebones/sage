@@ -140,51 +140,24 @@ const WRITABLE_KEYCODES = {
 	KEY_SPACE: [" ", " "],
 }
 
-class FollowingKeychain:
-	var following: Array
-	var cmd: StringName
-
-	func _init(f: Array, c: StringName):
-		following = f
-		cmd = c
-
 class Layout:
 	var toggle_cmd_mode: int = KEY_ENTER
 	var toggle_visual_mode: int = KEY_V
-	var enable_insert_mode: int = KEY_I
+	var toggle_insert_mode: int = KEY_I
 
-	# Binds that invoke commands. Works only in normal mode
+	# Binds that invoke commands. Works only in normal mode.
+	# We only allow one bind per command for simplicity and
+	# straightforwardness.
+	#
+	# Once the editor is in keychain flag, and in normal mode, it accepts
+	# combinations in strict order, unless they have no continuation, or lead
+	# to the final command.
 	var cmd_binds = {
-		KEY_H: [
-			FollowingKeychain.new(
-				[],
-				"left"
-			),
-		],
-		KEY_K: [
-			FollowingKeychain.new(
-				[],
-				"down"
-			),
-		],
-		KEY_L: [
-			FollowingKeychain.new(
-				[],
-				"up"
-			),
-		],
-		KEY_SEMICOLON: [
-			FollowingKeychain.new(
-				[],
-				"right"
-			),
-		],
-		KEY_SPACE: [
-			FollowingKeychain.new(
-				[KEY_O],
-				"open"
-			),
-		],
+		"left": [KEY_H],
+		"down": [KEY_K],
+		"up": [KEY_L],
+		"right": [KEY_SEMICOLON],
+		"open": [KEY_SPACE, KEY_O],
 	}
 
 class Settings:
@@ -192,10 +165,8 @@ class Settings:
 
 var settings: Settings = Settings.new()
 
-# !!
-var _is_keychain_started = false
-# Which keys are available to continue the combination
-var _next_possible_keychains: Array = []
+var keychain_index: int = -1
+var _possible_keychains: Array[Array] = []
 
 var _mode: Mode
 var _is_shift_pressed: bool = false
@@ -235,7 +206,11 @@ var insert_cursor_size: Vector2 = Vector2(1, -20)
 
 func _ready() -> void:
 	_set_mode(Mode.Normal)
-	_next_possible_keys = settings.layout.cmd_binds.keys()
+	_reset_keychain()
+
+func _reset_keychain():
+	keychain_index = -1
+	_possible_keychains = settings.layout.cmd_binds.values()
 
 func _set_mode(a_mode: Mode):
 	_mode = a_mode
@@ -247,10 +222,10 @@ func _draw_cursor():
 	var caret_pos = _get_caret_pos()
 	if _mode == Mode.Insert:
 		var rect: Rect2 = Rect2(caret_pos, insert_cursor_size)
-		draw_rect(rect, Color.WHITE)
+		draw_rect(rect, Color(1, 1, 1, 1))
 	elif _mode == Mode.Normal:
 		var rect: Rect2 = Rect2(caret_pos, normal_cursor_size)
-		draw_rect(rect, Color.WHITE)
+		draw_rect(rect, Color(1, 1, 1, 0.5))
 
 func _get_caret_pos() -> Vector2:
 	var caret_line = _get_caret_line()
@@ -450,9 +425,9 @@ func _process_normal():
 		_cmd_text.text = "> "
 		_cmd_text.visible = true
 		_mode_text.visible = false
-	elif _last_pressed_keycode == settings.layout.enable_insert_mode:
+	elif _last_pressed_keycode == settings.layout.toggle_insert_mode:
 		_set_mode(Mode.Insert)
-	elif _next_possible_keys.has(
+	# elif _next_possible_keys.has(
 	_last_inp_time = core.time()
 	_last_processed_keycode = _last_pressed_keycode
 	_last_pressed_keycode = -1
@@ -508,4 +483,3 @@ func _physics_process(_delta: float) -> void:
 			_process_insert()
 		Mode.Visual:
 			_process_visual()
-

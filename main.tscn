@@ -1,7 +1,7 @@
 [gd_scene load_steps=6 format=3 uid="uid://cuw7jqy236alw"]
 
 [ext_resource type="Script" path="res://main.gd" id="1_waxqj"]
-[ext_resource type="Script" path="res://editor.gd" id="1_yojct"]
+[ext_resource type="Script" path="res://editor/editor.gd" id="1_yojct"]
 [ext_resource type="Texture2D" uid="uid://bnm4esg6hxf68" path="res://assets/black.png" id="2_boaja"]
 [ext_resource type="FontFile" uid="uid://bct236saktyd" path="res://assets/monogram.ttf" id="4_56gcg"]
 
