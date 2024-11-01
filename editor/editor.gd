@@ -158,6 +158,7 @@ class Layout:
 		"up": [KEY_L],
 		"right": [KEY_SEMICOLON],
 		"open": [KEY_SPACE, KEY_O],
+		"_toggle_append": [KEY_A]
 	}
 
 class Settings:
@@ -180,6 +181,23 @@ var _same_inp_delay: int = 100
 var _font_size: int = 32
 
 var _caret: Vector2i = Vector2i.ZERO
+
+var _cmd_to_fn = {
+	"left": func f():
+		_move_caret(-1, 0)
+		queue_redraw(),
+	"right": func f():
+		_move_caret(1, 0)
+		queue_redraw(),
+	"up": func f():
+		_move_caret(0, -1)
+		queue_redraw(),
+	"down": func f():
+		_move_caret(0, 1)
+		queue_redraw(),
+	"open": _toggle_open,
+	"_toggle_append": _toggle_append,
+}
 
 @onready var _mode_text = core.find("Info/Mode")
 @onready var _cmd_text = core.find("Info/Cmd")
@@ -365,11 +383,15 @@ func _write(c: String, target: WriteTarget):
 		c = c.replace("\t", space_chunk)
 
 	if target == WriteTarget.Buffer:
-		_set_caret_line(lines[_caret.y].insert(_caret.x, c))
-		_move_caret(1, 0)
 		if c == "\n":
-			lines.append("")
+			var remaining = lines[_caret.y].substr(_caret.x)
+			lines[_caret.y] = lines[_caret.y].substr(0, _caret.x)
+			lines.append(remaining)
 			_move_caret(0, 1)
+			_caret.x = 0
+		else:
+			_set_caret_line(lines[_caret.y].insert(_caret.x, c))
+			_move_caret(1, 0)
 		queue_redraw()
 	elif target == WriteTarget.CmdField:
 		_cmd_field_text += c
@@ -482,7 +504,11 @@ func _process_normal_keychains():
 	_possible_keychains = new_possible_keychains
 
 func _exe_cmd(cmd: String):
+	if !_cmd_to_fn.has(cmd):
+		print("Not found: ", cmd)
+		return
 	print("Executing: ", cmd)
+	_cmd_to_fn[cmd].call()
 
 func _process_cmd_mode():
 	if _last_pressed_keycode == settings.layout.toggle_cmd_mode:
@@ -545,3 +571,11 @@ func _physics_process(_delta: float) -> void:
 			_process_insert()
 		Mode.Visual:
 			_process_visual()
+
+func _toggle_open():
+	pass
+
+func _toggle_append():
+	_set_mode(Mode.Insert)
+	_move_caret(1, 0)
+	queue_redraw()
