@@ -221,10 +221,7 @@ enum IndentMode {
 	Space,
 }
 var indent_mode: IndentMode = IndentMode.Tab
-# How many pixels to use for a tab
-var tab_size: float = 40
-# Actual only for IndentMode.Space. How many spaces are inserted per tab.
-var space_indent_amount: int = 4
+var tab_graphic: StringName = "    "
 
 var line_number_right_margin: float = 50
 var lines: PackedStringArray = [""]
@@ -260,15 +257,21 @@ func _draw_cursor():
 		draw_rect(rect, Color(1, 1, 1, 0.5))
 
 func _get_caret_pos() -> Vector2:
-	var caret_line = _get_caret_line()
-	var caret_line_x = \
-		line_number_right_margin \
-		+ _font.get_string_size(
-			caret_line.substr(0, _caret.x),
-			HORIZONTAL_ALIGNMENT_LEFT,
-			-1,
-			_font_size
-		).x
+	var caret_line = _get_caret_line().substr(0, _caret.x)
+	var caret_line_x = line_number_right_margin
+	for c in caret_line:
+		if c == "\t":
+			caret_line_x += _font.get_char_size(" ".unicode_at(0), _font_size).x * tab_graphic.length()
+			continue
+		caret_line_x += _font.get_char_size(c.unicode_at(0), _font_size).x
+	# var caret_line_x = \
+	# 	line_number_right_margin \
+	# 	+ _font.get_string_size(
+	# 		caret_line.replace("\t", tab_graphic).substr(0, _caret.x),
+	# 		HORIZONTAL_ALIGNMENT_LEFT,
+	# 		-1,
+	# 		_font_size
+	# 	).x
 	var caret_line_y = line_y_poses[_caret.y]
 	return Vector2(
 		caret_line_x,
@@ -296,28 +299,9 @@ func _draw() -> void:
 			Color(1, 1, 1, 0.25)
 		)
 		line_y_poses.append(pos.y)
-		var tabbed_parts = line.split("\t")
 		pos.x = line_number_right_margin
-		var i = 0
-		for part in tabbed_parts:
-			draw_string(_font, pos, part, HORIZONTAL_ALIGNMENT_CENTER, -1, _font_size)
-
-			var str_size = _font.get_string_size(
-				part, HORIZONTAL_ALIGNMENT_CENTER, -1, _font_size
-			)
-			pos.x += str_size.x
-			var before_tab_pos = pos
-			pos.x += tab_size
-			var after_tab_pos = pos
-
-			# Draw graphics for tabs
-			if i < tabbed_parts.size() - 1:
-				var font_height = _font.get_height(_font_size) / 4
-				before_tab_pos.y -= font_height
-				after_tab_pos.y -= font_height
-				# Disabled for now
-				# draw_dashed_line(before_tab_pos, after_tab_pos, Color.GRAY, -1, 4)
-			i += 1
+		var line_to_draw = line.replace("\t", tab_graphic)
+		draw_string(_font, pos, line_to_draw, HORIZONTAL_ALIGNMENT_CENTER, -1, _font_size)
 
 		var line_size = line.length()
 		if lineno < lines.size():
@@ -387,10 +371,7 @@ func _write(c: String, target: WriteTarget):
 		return
 
 	if indent_mode == IndentMode.Space:
-		var space_chunk = ""
-		for _i in range(space_indent_amount):
-			space_chunk += " "
-		c = c.replace("\t", space_chunk)
+		c = c.replace("\t", tab_graphic)
 
 	if target == WriteTarget.Buffer:
 		if c == "\n":
@@ -401,7 +382,7 @@ func _write(c: String, target: WriteTarget):
 			_caret.x = 0
 		else:
 			_set_caret_line(lines[_caret.y].insert(_caret.x, c))
-			_move_caret(1, 0)
+			_move_caret(c.length(), 0)
 		queue_redraw()
 	elif target == WriteTarget.CmdField:
 		_cmd_field_text += c
@@ -500,7 +481,8 @@ func _process_normal_keychains():
 			&& _is_shift_pressed
 			&& keychain[_keychain_index].keycode == _last_pressed_keycode
 		) || (
-			!_is_shift_pressed
+			!(keychain[_keychain_index] is Shifted)
+			&& !_is_shift_pressed
 			&& !_is_ctrl_pressed
 			&& !_is_alt_pressed
 			&& keychain[_keychain_index] == _last_pressed_keycode
