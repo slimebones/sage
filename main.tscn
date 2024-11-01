@@ -17,6 +17,7 @@ offset_left = -430.0
 offset_top = -366.0
 offset_right = 1547.0
 offset_bottom = 1033.0
+rotation = -0.0021512
 scale = Vector2(0.992666, 0.998765)
 texture = ExtResource("2_boaja")
 
