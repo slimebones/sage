@@ -140,6 +140,12 @@ const WRITABLE_KEYCODES = {
 	KEY_SPACE: [" ", " "],
 }
 
+class Shifted:
+	var keycode: int = -1
+
+	func _init(a_keycode: int):
+		keycode = a_keycode
+
 class Layout:
 	var toggle_cmd_mode: int = KEY_ENTER
 	var toggle_visual_mode: int = KEY_V
@@ -158,8 +164,29 @@ class Layout:
 		"up": [KEY_L],
 		"right": [KEY_SEMICOLON],
 		"open": [KEY_SPACE, KEY_O],
-		"_toggle_append": [KEY_A]
+		"append": [KEY_A],
+		"append_line": [KEY_O],
+		"prepend_line": [Shifted.new(KEY_O)],
 	}
+
+var _cmd_to_fn = {
+	"left": func f():
+		_move_caret(-1, 0)
+		queue_redraw(),
+	"right": func f():
+		_move_caret(1, 0)
+		queue_redraw(),
+	"up": func f():
+		_move_caret(0, -1)
+		queue_redraw(),
+	"down": func f():
+		_move_caret(0, 1)
+		queue_redraw(),
+	"open": _toggle_open,
+	"append": _toggle_append,
+	"append_line": _append_line,
+	"prepend_line": _prepend_line,
+}
 
 class Settings:
 	var layout: Layout = Layout.new()
@@ -181,23 +208,6 @@ var _same_inp_delay: int = 100
 var _font_size: int = 32
 
 var _caret: Vector2i = Vector2i.ZERO
-
-var _cmd_to_fn = {
-	"left": func f():
-		_move_caret(-1, 0)
-		queue_redraw(),
-	"right": func f():
-		_move_caret(1, 0)
-		queue_redraw(),
-	"up": func f():
-		_move_caret(0, -1)
-		queue_redraw(),
-	"down": func f():
-		_move_caret(0, 1)
-		queue_redraw(),
-	"open": _toggle_open,
-	"_toggle_append": _toggle_append,
-}
 
 @onready var _mode_text = core.find("Info/Mode")
 @onready var _cmd_text = core.find("Info/Cmd")
@@ -485,7 +495,16 @@ func _process_normal_keychains():
 	var new_possible_keychains = {}
 	for cmd in _possible_keychains.keys():
 		var keychain = _possible_keychains[cmd]
-		if keychain[_keychain_index] == _last_pressed_keycode:
+		if (
+			keychain[_keychain_index] is Shifted
+			&& _is_shift_pressed
+			&& keychain[_keychain_index].keycode == _last_pressed_keycode
+		) || (
+			!_is_shift_pressed
+			&& !_is_ctrl_pressed
+			&& !_is_alt_pressed
+			&& keychain[_keychain_index] == _last_pressed_keycode
+		):
 			# Last hit keychain lead to the final command execution
 			if keychain.size() - 1 == _keychain_index:
 				_exe_cmd(cmd)
@@ -576,6 +595,18 @@ func _toggle_open():
 	pass
 
 func _toggle_append():
-	_set_mode(Mode.Insert)
 	_move_caret(1, 0)
+	_set_mode(Mode.Insert)
+	queue_redraw()
+
+func _append_line():
+	lines.insert(_caret.y + 1, "")
+	_move_caret(0, 1)
+	_set_mode(Mode.Insert)
+	queue_redraw()
+
+func _prepend_line():
+	lines.insert(_caret.y, "")
+	_move_caret(0, -1)
+	_set_mode(Mode.Insert)
 	queue_redraw()
