@@ -152,8 +152,8 @@ class Layout:
 	# Once the editor is in keychain flag, and in normal mode, it accepts
 	# combinations in strict order, unless they have no continuation, or lead
 	# to the final command.
-	var cmd_binds = {
-		"left": [KEY_H],
+	var keychains = {
+		"left": [KEY_J],
 		"down": [KEY_K],
 		"up": [KEY_L],
 		"right": [KEY_SEMICOLON],
@@ -165,8 +165,8 @@ class Settings:
 
 var settings: Settings = Settings.new()
 
-var keychain_index: int = -1
-var _possible_keychains: Array[Array] = []
+var _keychain_index: int = 0
+var _possible_keychains = {}
 
 var _mode: Mode
 var _is_shift_pressed: bool = false
@@ -174,6 +174,7 @@ var _is_ctrl_pressed: bool = false
 var _is_alt_pressed: bool = false
 var _last_processed_keycode: int = -1
 var _last_pressed_keycode: int = -1
+var _await_next_insert_escape: bool = false
 var _last_inp_time: int = 0
 var _same_inp_delay: int = 100
 var _font_size: int = 32
@@ -209,12 +210,15 @@ func _ready() -> void:
 	_reset_keychain()
 
 func _reset_keychain():
-	keychain_index = -1
-	_possible_keychains = settings.layout.cmd_binds.values()
+	_keychain_index = 0
+	_possible_keychains = settings.layout.keychains
+
+func _is_keychain_started():
+	return _keychain_index > 0
 
 func _set_mode(a_mode: Mode):
 	_mode = a_mode
-	_mode_text.text = _get_mode_str()
+	_mode_text.text = _str_mode()
 	queue_redraw()
 
 ## Draws cursor at caret position.
@@ -299,7 +303,7 @@ func _draw() -> void:
 
 	_draw_cursor()
 
-func _get_mode_str():
+func _str_mode():
 	match _mode:
 		Mode.Normal:
 			return "Normal"
@@ -309,6 +313,21 @@ func _get_mode_str():
 			return "Visual"
 		Mode.Cmd:
 			return "Command"
+
+## Move display by pixels.
+func _move_display(v: Vector2):
+	# TODO: Implement display movement
+	pass
+
+## `chars` can be negative to move to the left, otherwise move to the right.
+func _move_display_horizontal_chars(chars: int):
+	# TODO: Implement display movement
+	pass
+
+## `lines` can be negative to move to the top, otherwise move to the bottom.
+func _move_display_vertical_lines(lines: int):
+	# TODO: Implement display movement
+	pass
 
 func _move_caret(x: int, y: int):
 	var offset = Vector2i(x, y)
@@ -321,7 +340,7 @@ func _move_caret(x: int, y: int):
 
 	if _caret.y > lines.size() - 1:
 		_caret.y = lines.size() - 1
-	# If caret moves to new line, the X position will always be at the end,
+	# If a caret moves to a new line, the X position will always be at the end,
 	# if overflown
 	if _caret.x > lines[_caret.y].length():
 		_caret.x = lines[_caret.y].length()
@@ -333,7 +352,7 @@ enum WriteTarget {
 
 var _cmd_field_text: String = ""
 
-# Write at current caret position.
+## Write at current caret position.
 func _write(c: String, target: WriteTarget):
 	assert(c.length() <= 1)
 	if c == "":
@@ -362,8 +381,6 @@ func _get_caret_line() -> String:
 func _set_caret_line(s: String):
 	lines[_caret.y] = s
 
-# Erase certain amount of characters. If the amount is negative, erase to the
-# left of the caret, otherwise erase to the right.
 func _erase_left_char(target: WriteTarget):
 	if target == WriteTarget.Buffer:
 		if _caret == Vector2i.ZERO:
@@ -420,22 +437,54 @@ func _process_insert():
 	_last_pressed_keycode = -1
 
 func _process_normal():
-	if _last_pressed_keycode == settings.layout.toggle_cmd_mode:
+	# We block any other actions if we've hit the keychain
+	if _is_keychain_started():
+		_process_normal_keychains()
+	elif _last_pressed_keycode == settings.layout.toggle_cmd_mode:
 		_set_mode(Mode.Cmd)
 		_cmd_text.text = "> "
 		_cmd_text.visible = true
 		_mode_text.visible = false
 	elif _last_pressed_keycode == settings.layout.toggle_insert_mode:
 		_set_mode(Mode.Insert)
-	# elif _next_possible_keys.has(
+	else:
+		_process_normal_keychains()
+
 	_last_inp_time = core.time()
 	_last_processed_keycode = _last_pressed_keycode
 	_last_pressed_keycode = -1
 
+func _process_normal_keychains():
+	# We wait infinitely for the new keycode while in keychain
+	if _last_pressed_keycode == -1:
+		return
+
+	var _old_keychain_index = _keychain_index
+	var new_possible_keychains = {}
+	for cmd in _possible_keychains.keys():
+		var keychain = _possible_keychains[cmd]
+		if keychain[_keychain_index] == _last_pressed_keycode:
+			# Last hit keychain lead to the final command execution
+			if keychain.size() - 1 == _keychain_index:
+				_exe_cmd(cmd)
+				_reset_keychain()
+				return
+			# Increment only once
+			if new_possible_keychains.size() == 0:
+				_keychain_index += 1
+			new_possible_keychains[cmd] = keychain
+
+	var current_combination = _possible_keychains.values()[0].slice(0, _keychain_index)
+	if new_possible_keychains.size() == 0:
+		print("Unknown combination: ", current_combination)
+		_reset_keychain()
+		return
+	_possible_keychains = new_possible_keychains
+
 func _exe_cmd(cmd: String):
 	print("Executing: ", cmd)
 
-func _process_cmd():
+func _process_cmd_mode():
 	if _last_pressed_keycode == settings.layout.toggle_cmd_mode:
 		_set_mode(Mode.Normal)
 		_exe_cmd(_cmd_field_text)
@@ -466,19 +515,32 @@ func _physics_process(_delta: float) -> void:
 		return
 	_process_keyboard()
 
-	if _mode == Mode.Insert && _is_alt_pressed:
-		_set_mode(Mode.Normal)
-		return
-
 	# Prevent too fast input handling
 	if _last_pressed_keycode == -1 || (_last_pressed_keycode == _last_processed_keycode && core.is_cooldown(_last_inp_time, _same_inp_delay)):
 		_last_pressed_keycode = -1
 		return
+
+	if _mode == Mode.Insert:
+		if _last_pressed_keycode == settings.layout.toggle_insert_mode:
+			if !_await_next_insert_escape:
+				_await_next_insert_escape = true
+			else:
+				# Erase last written `i` symbols
+				_erase_left_char(WriteTarget.Buffer)
+				_set_mode(Mode.Normal)
+				_await_next_insert_escape = false
+				_last_inp_time = core.time()
+				_last_processed_keycode = _last_pressed_keycode
+				_last_pressed_keycode = -1
+				return
+		else:
+			_await_next_insert_escape = false
+
 	match _mode:
 		Mode.Normal:
 			_process_normal()
 		Mode.Cmd:
-			_process_cmd()
+			_process_cmd_mode()
 		Mode.Insert:
 			_process_insert()
 		Mode.Visual:
