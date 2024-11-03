@@ -13,5 +13,5 @@ class Err:
 func ee(v) -> bool:
 	return v is Err
 
-func new_err(msg: String = "", code: StringName = "") -> Err:
+func err(msg: String = "", code: StringName = "") -> Err:
 	return Err.new(msg, code)

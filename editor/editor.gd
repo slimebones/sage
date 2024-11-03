@@ -41,31 +41,31 @@ var line_sizes: PackedInt64Array = []
 var line_y_poses: PackedFloat64Array = []
 var normal_cursor_size: Vector2 = Vector2(10, -20)
 var insert_cursor_size: Vector2 = Vector2(1, -20)
-var _buffer: Buffer = null
+var _buffer: Buf = null
 
-func set_buffer(a_buffer: Buffer):
+func set_buffer(a_buffer: Buf):
 	_buffer = a_buffer
 
-func on_mode_changed(old_mode: Buffer.Mode, new_mode: Buffer.Mode):
+func on_mode_changed(old_mode: Buf.Mode, new_mode: Buf.Mode):
 	match old_mode:
-		Buffer.Mode.Insert:
+		Buf.Mode.Insert:
 			match new_mode:
-				Buffer.Mode.Normal:
+				Buf.Mode.Normal:
 					# Erase last written `i` symbol
 					_erase_left_char()
 	queue_redraw()
 
 func on_key_pressed(
-	mode: Buffer.Mode,
+	mode: Buf.Mode,
 	key: int,
 	is_shift_pressed: bool,
 	is_ctrl_pressed: bool,
 	is_alt_pressed: bool,
 ):
-	if mode == Buffer.Mode.Insert:
+	if mode == Buf.Mode.Insert:
 		if !common.config.layout.writables.has(key):
 			assert(_buffer != null)
-			return Buffer.ProcessorFlag.KeyReset
+			return Buf.ProcessorFlag.KeyReset
 		if is_ctrl_pressed || is_alt_pressed:
 			return
 		if !is_shift_pressed && key == KEY_BACKSPACE:
@@ -77,23 +77,23 @@ func on_key_pressed(
 		else:
 			c = common.config.layout.writables[key][0]
 		_write(c)
-	elif mode == Buffer.Mode.Visual:
+	elif mode == Buf.Mode.Visual:
 		# TODO: Implement visual
 		pass
 
 func execute_cmd(cmd: String):
 	if !_cmds.has(cmd):
-		return err.new_err("", err.CODE_NOT_FOUND_ERR)
+		return err.err("", err.CODE_NOT_FOUND_ERR)
 	_cmds[cmd].call()
 	return ""
 
 # Draws cursor at caret position.
 func _draw_cursor():
 	var caret_pos = _get_caret_pos()
-	if _buffer.get_mode() == Buffer.Mode.Insert:
+	if _buffer.get_mode() == Buf.Mode.Insert:
 		var rect: Rect2 = Rect2(caret_pos, insert_cursor_size)
 		draw_rect(rect, Color(1, 1, 1, 1))
-	elif _buffer.get_mode() == Buffer.Mode.Normal:
+	elif _buffer.get_mode() == Buf.Mode.Normal:
 		var rect: Rect2 = Rect2(caret_pos, normal_cursor_size)
 		draw_rect(rect, Color(1, 1, 1, 0.5))
 
@@ -202,19 +202,19 @@ func _erase_left_char():
 
 func _toggle_append():
 	_move_caret(1, 0)
-	_buffer.set_mode(Buffer.Mode.Insert)
+	_buffer.set_mode(Buf.Mode.Insert)
 	queue_redraw()
 
 func _append_line():
 	_buffer.content_str.insert(_caret.y + 1, "")
 	_move_caret(0, 1)
-	_buffer.set_mode(Buffer.Mode.Insert)
+	_buffer.set_mode(Buf.Mode.Insert)
 	queue_redraw()
 
 func _prepend_line():
 	_buffer.content_str.insert(_caret.y, "")
 	_move_caret(0, -1)
-	_buffer.set_mode(Buffer.Mode.Insert)
+	_buffer.set_mode(Buf.Mode.Insert)
 	queue_redraw()
 
 func _physics_process(_delta: float) -> void:

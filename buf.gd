@@ -2,7 +2,7 @@
 # insert and visual modes implementation, as well as dispatches executed
 # commands to a connected processor.
 extends Control
-class_name Buffer
+class_name Buf
 
 @export var _mode_text: Label
 @export var _cmd_text: Label
