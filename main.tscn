@@ -1,11 +1,16 @@
-[gd_scene load_steps=6 format=3 uid="uid://cuw7jqy236alw"]
+[gd_scene load_steps=8 format=3 uid="uid://cuw7jqy236alw"]
 
 [ext_resource type="Script" path="res://main.gd" id="1_waxqj"]
 [ext_resource type="Script" path="res://editor/editor.gd" id="1_yojct"]
 [ext_resource type="Texture2D" uid="uid://bnm4esg6hxf68" path="res://assets/black.png" id="2_boaja"]
+[ext_resource type="Script" path="res://buffer.gd" id="3_yg4kr"]
 [ext_resource type="FontFile" uid="uid://bct236saktyd" path="res://assets/monogram.ttf" id="4_56gcg"]
 
 [sub_resource type="LabelSettings" id="LabelSettings_dafbl"]
+font = ExtResource("4_56gcg")
+font_size = 32
+
+[sub_resource type="LabelSettings" id="LabelSettings_trb6c"]
 font = ExtResource("4_56gcg")
 font_size = 32
 
@@ -13,44 +18,67 @@ font_size = 32
 script = ExtResource("1_waxqj")
 
 [node name="Background" type="TextureRect" parent="."]
-offset_left = -430.0
-offset_top = -366.0
-offset_right = 1547.0
-offset_bottom = 1033.0
-scale = Vector2(0.992666, 0.998765)
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 texture = ExtResource("2_boaja")
 
-[node name="Editor" type="Control" parent="."]
+[node name="Buffer" type="Control" parent="." node_paths=PackedStringArray("_mode_text", "_cmd_text", "_debug_text")]
 layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+scale = Vector2(1.01445, 1.0067)
+script = ExtResource("3_yg4kr")
+_mode_text = NodePath("../Info/Mode")
+_cmd_text = NodePath("../Info/Cmd")
+_debug_text = NodePath("../Info/Debug")
+
+[node name="Editor" type="Control" parent="Buffer" node_paths=PackedStringArray("_caret_text")]
+layout_mode = 2
 anchors_preset = 0
-offset_left = 38.0
-offset_top = 25.0
-offset_right = 1115.0
-offset_bottom = 592.0
+offset_left = 60.1312
+offset_top = 46.6872
+offset_right = 60.1312
+offset_bottom = 46.6872
+grow_horizontal = 2
+grow_vertical = 2
 script = ExtResource("1_yojct")
+_caret_text = NodePath("../../Info/CaretText")
 
 [node name="Info" type="HBoxContainer" parent="."]
-offset_left = 29.0
-offset_top = 612.0
-offset_right = 602.0
-offset_bottom = 638.0
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 13.0
+offset_top = -36.0
+offset_right = 95.0
+offset_bottom = -10.0
+grow_vertical = 0
+size_flags_horizontal = 0
 
 [node name="Cmd" type="Label" parent="Info"]
 visible = false
 layout_mode = 2
+size_flags_horizontal = 4
 label_settings = SubResource("LabelSettings_dafbl")
 
 [node name="Mode" type="Label" parent="Info"]
 layout_mode = 2
+size_flags_horizontal = 4
 text = "Normal"
 label_settings = SubResource("LabelSettings_dafbl")
 
 [node name="Debug" type="Label" parent="Info"]
 layout_mode = 2
+size_flags_horizontal = 4
 label_settings = SubResource("LabelSettings_dafbl")
 
-[node name="CaretText" type="Label" parent="."]
-offset_left = 1087.0
-offset_top = 611.0
-offset_right = 1127.0
-offset_bottom = 634.0
+[node name="CaretText" type="Label" parent="Info"]
+layout_mode = 2
+size_flags_horizontal = 4
+label_settings = SubResource("LabelSettings_trb6c")

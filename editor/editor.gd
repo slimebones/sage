@@ -1,175 +1,13 @@
 extends Control
+class_name Editor
 
-enum Mode {
-	Normal,
-	Insert,
-	Visual,
-	Cmd,
-}
+@export var _caret_text: Label
+@onready var _font = preload("res://assets/monogram.ttf")
 
-# We don't have SHIFT, CTRL and ALT here, since we use them in various
-# combinations.
-const KEYCODES = [
-	KEY_ESCAPE,
+class Config:
+	pass
 
-	KEY_F1,
-	KEY_F2,
-	KEY_F3,
-	KEY_F4,
-	KEY_F5,
-	KEY_F6,
-	KEY_F7,
-	KEY_F8,
-	KEY_F9,
-	KEY_F10,
-	KEY_F11,
-	KEY_F12,
-
-	KEY_QUOTELEFT,
-	KEY_1,
-	KEY_2,
-	KEY_3,
-	KEY_4,
-	KEY_5,
-	KEY_6,
-	KEY_7,
-	KEY_8,
-	KEY_9,
-	KEY_0,
-	KEY_MINUS,
-	KEY_EQUAL,
-	KEY_BACKSPACE,
-
-	KEY_TAB,
-	KEY_Q,
-	KEY_W,
-	KEY_E,
-	KEY_R,
-	KEY_T,
-	KEY_Y,
-	KEY_U,
-	KEY_I,
-	KEY_O,
-	KEY_P,
-	KEY_BRACKETLEFT,
-	KEY_BRACKETRIGHT,
-	KEY_BACKSLASH,
-
-	KEY_A,
-	KEY_S,
-	KEY_D,
-	KEY_F,
-	KEY_G,
-	KEY_H,
-	KEY_J,
-	KEY_K,
-	KEY_L,
-	KEY_SEMICOLON,
-	KEY_APOSTROPHE,
-	KEY_ENTER,
-
-	KEY_Z,
-	KEY_X,
-	KEY_C,
-	KEY_V,
-	KEY_B,
-	KEY_N,
-	KEY_M,
-	KEY_COMMA,
-	KEY_PERIOD,
-	KEY_SLASH,
-
-	KEY_SPACE,
-]
-const WRITABLE_KEYCODES = {
-	KEY_QUOTELEFT: ["`", "~"],
-	KEY_1: ["1", "!"],
-	KEY_2: ["2", "@"],
-	KEY_3: ["3", "#"],
-	KEY_4: ["4", "$"],
-	KEY_5: ["5", "%"],
-	KEY_6: ["6", "^"],
-	KEY_7: ["7", "&"],
-	KEY_8: ["8", "*"],
-	KEY_9: ["9", "("],
-	KEY_0: ["0", ")"],
-	KEY_MINUS: ["-", "_"],
-	KEY_EQUAL: ["=", "+"],
-	# Does erasing, so technically is "Writable"
-	KEY_BACKSPACE: ["", ""],
-
-	KEY_TAB: ["\t", "\t"],
-	KEY_Q: ["q", "Q"],
-	KEY_W: ["w", "W"],
-	KEY_E: ["e", "E"],
-	KEY_R: ["r", "R"],
-	KEY_T: ["t", "T"],
-	KEY_Y: ["y", "Y"],
-	KEY_U: ["u", "U"],
-	KEY_I: ["i", "I"],
-	KEY_O: ["o", "O"],
-	KEY_P: ["p", "P"],
-	KEY_BRACKETLEFT: ["[", "{"],
-	KEY_BRACKETRIGHT: ["]", "}"],
-	KEY_BACKSLASH: ["\\", "|"],
-
-	KEY_A: ["a", "A"],
-	KEY_S: ["s", "S"],
-	KEY_D: ["d", "D"],
-	KEY_F: ["f", "F"],
-	KEY_G: ["g", "G"],
-	KEY_H: ["h", "H"],
-	KEY_J: ["j", "J"],
-	KEY_K: ["k", "K"],
-	KEY_L: ["l", "L"],
-	KEY_SEMICOLON: [";", ":"],
-	KEY_APOSTROPHE: ["'", "\""],
-	KEY_ENTER: ["\n", "\n"],
-
-	KEY_Z: ["z", "Z"],
-	KEY_X: ["x", "X"],
-	KEY_C: ["c", "C"],
-	KEY_V: ["v", "V"],
-	KEY_B: ["b", "B"],
-	KEY_N: ["n", "N"],
-	KEY_M: ["m", "M"],
-	KEY_COMMA: [",", "<"],
-	KEY_PERIOD: [".", ">"],
-	KEY_SLASH: ["/", "?"],
-
-	KEY_SPACE: [" ", " "],
-}
-
-class Shifted:
-	var keycode: int = -1
-
-	func _init(a_keycode: int):
-		keycode = a_keycode
-
-class Layout:
-	var toggle_cmd_mode: int = KEY_ENTER
-	var toggle_visual_mode: int = KEY_V
-	var toggle_insert_mode: int = KEY_I
-
-	# Binds that invoke commands. Works only in normal mode.
-	# We only allow one bind per command for simplicity and
-	# straightforwardness.
-	#
-	# Once the editor is in keychain flag, and in normal mode, it accepts
-	# combinations in strict order, unless they have no continuation, or lead
-	# to the final command.
-	var keychains = {
-		"left": [KEY_J],
-		"down": [KEY_K],
-		"up": [KEY_L],
-		"right": [KEY_SEMICOLON],
-		"open": [KEY_SPACE, KEY_O],
-		"append": [KEY_A],
-		"append_line": [KEY_O],
-		"prepend_line": [Shifted.new(KEY_O)],
-	}
-
-var _cmd_to_fn = {
+var _cmds = {
 	"left": func f():
 		_move_caret(-1, 0)
 		queue_redraw(),
@@ -182,38 +20,13 @@ var _cmd_to_fn = {
 	"down": func f():
 		_move_caret(0, 1)
 		queue_redraw(),
-	"open": _toggle_open,
 	"append": _toggle_append,
 	"append_line": _append_line,
 	"prepend_line": _prepend_line,
 }
 
-class Settings:
-	var layout: Layout = Layout.new()
-
-var settings: Settings = Settings.new()
-
-var _keychain_index: int = 0
-var _possible_keychains = {}
-
-var _mode: Mode
-var _is_shift_pressed: bool = false
-var _is_ctrl_pressed: bool = false
-var _is_alt_pressed: bool = false
-var _last_processed_keycode: int = -1
-var _last_pressed_keycode: int = -1
-var _await_next_insert_escape: bool = false
-var _last_inp_time: int = 0
-var _same_inp_delay: int = 100
 var _font_size: int = 32
-
 var _caret: Vector2i = Vector2i.ZERO
-
-@onready var _mode_text = core.find("Info/Mode")
-@onready var _cmd_text = core.find("Info/Cmd")
-@onready var _debug_text = core.find("Info/Debug")
-@onready var _font = preload("res://assets/monogram.ttf")
-@onready var _caret_text = core.find("CaretText")
 var line_spacing: float = 20
 
 enum IndentMode {
@@ -224,35 +37,63 @@ var indent_mode: IndentMode = IndentMode.Tab
 var tab_graphic: StringName = "    "
 
 var line_number_right_margin: float = 50
-var lines: PackedStringArray = [""]
 var line_sizes: PackedInt64Array = []
 var line_y_poses: PackedFloat64Array = []
 var normal_cursor_size: Vector2 = Vector2(10, -20)
 var insert_cursor_size: Vector2 = Vector2(1, -20)
+var _buffer: Buffer = null
 
-func _ready() -> void:
-	_set_mode(Mode.Normal)
-	_reset_keychain()
+func set_buffer(a_buffer: Buffer):
+	_buffer = a_buffer
 
-func _reset_keychain():
-	_keychain_index = 0
-	_possible_keychains = settings.layout.keychains
-
-func _is_keychain_started():
-	return _keychain_index > 0
-
-func _set_mode(a_mode: Mode):
-	_mode = a_mode
-	_mode_text.text = _str_mode()
+func on_mode_changed(old_mode: Buffer.Mode, new_mode: Buffer.Mode):
+	match old_mode:
+		Buffer.Mode.Insert:
+			match new_mode:
+				Buffer.Mode.Normal:
+					# Erase last written `i` symbol
+					_erase_left_char()
 	queue_redraw()
 
-## Draws cursor at caret position.
+func on_key_pressed(
+	mode: Buffer.Mode,
+	key: int,
+	is_shift_pressed: bool,
+	is_ctrl_pressed: bool,
+	is_alt_pressed: bool,
+):
+	if mode == Buffer.Mode.Insert:
+		if !common.config.layout.writables.has(key):
+			assert(_buffer != null)
+			return Buffer.ProcessorFlag.KeyReset
+		if is_ctrl_pressed || is_alt_pressed:
+			return
+		if !is_shift_pressed && key == KEY_BACKSPACE:
+			_erase_left_char()
+			return
+		var c = ""
+		if is_shift_pressed:
+			c = common.config.layout.writables[key][1]
+		else:
+			c = common.config.layout.writables[key][0]
+		_write(c)
+	elif mode == Buffer.Mode.Visual:
+		# TODO: Implement visual
+		pass
+
+func execute_cmd(cmd: String):
+	if !_cmds.has(cmd):
+		return err.new_err("", err.CODE_NOT_FOUND_ERR)
+	_cmds[cmd].call()
+	return ""
+
+# Draws cursor at caret position.
 func _draw_cursor():
 	var caret_pos = _get_caret_pos()
-	if _mode == Mode.Insert:
+	if _buffer.get_mode() == Buffer.Mode.Insert:
 		var rect: Rect2 = Rect2(caret_pos, insert_cursor_size)
 		draw_rect(rect, Color(1, 1, 1, 1))
-	elif _mode == Mode.Normal:
+	elif _buffer.get_mode() == Buffer.Mode.Normal:
 		var rect: Rect2 = Rect2(caret_pos, normal_cursor_size)
 		draw_rect(rect, Color(1, 1, 1, 0.5))
 
@@ -283,7 +124,7 @@ func _draw() -> void:
 	var lineno = 1
 	line_sizes = []
 	line_y_poses = []
-	for line in lines:
+	for line in _buffer.content_str:
 		draw_string(
 			_font,
 			Vector2(
@@ -296,7 +137,7 @@ func _draw() -> void:
 			HORIZONTAL_ALIGNMENT_CENTER,
 			-1,
 			_font_size,
-			Color(1, 1, 1, 0.25)
+			Color(1, 1, 1, 0.2511)
 		)
 		line_y_poses.append(pos.y)
 		pos.x = line_number_right_margin
@@ -304,9 +145,9 @@ func _draw() -> void:
 		draw_string(_font, pos, line_to_draw, HORIZONTAL_ALIGNMENT_CENTER, -1, _font_size)
 
 		var line_size = line.length()
-		if lineno < lines.size():
+		if lineno < _buffer.content_str.size():
 			# Count+Write newline sign
-			lines[lineno - 1] += "\n"
+			_buffer.content_str[lineno - 1] += "\n"
 			line_size += 1
 		line_sizes.append(line_size)
 
@@ -315,28 +156,81 @@ func _draw() -> void:
 
 	_draw_cursor()
 
-func _str_mode():
-	match _mode:
-		Mode.Normal:
-			return "Normal"
-		Mode.Insert:
-			return "Insert"
-		Mode.Visual:
-			return "Visual"
-		Mode.Cmd:
-			return "Command"
+# Write at current caret position.
+func _write(c: String):
+	assert(c.length() <= 1)
+	if c == "":
+		return
 
-## Move display by pixels.
+	if indent_mode == IndentMode.Space:
+		c = c.replace("\t", tab_graphic)
+
+	if c == "\n":
+		var remaining = _buffer.content_str[_caret.y].substr(_caret.x)
+		_buffer.content_str[_caret.y] = _buffer.content_str[_caret.y].substr(0, _caret.x)
+		_buffer.content_str.append(remaining)
+		_move_caret(0, 1)
+		_caret.x = 0
+	else:
+		_set_caret_line(_buffer.content_str[_caret.y].insert(_caret.x, c))
+		_move_caret(c.length(), 0)
+	queue_redraw()
+
+func _get_caret_line() -> String:
+	return _buffer.content_str[_caret.y]
+
+func _set_caret_line(s: String):
+	_buffer.content_str[_caret.y] = s
+
+func _erase_left_char():
+	if _caret == Vector2i.ZERO:
+		return
+
+	if _get_caret_line().length() == 0:
+		_buffer.content_str.remove_at(_caret.y)
+		_move_caret(0, -1)
+		# Put caret to the end of the previous line upon erasing the old
+		# one
+		_caret.x = _get_caret_line().length()
+		queue_redraw()
+		return
+	# We can erase only by positive count, so we move caret to the left by
+	# the required amount, and only then erase.
+	_move_caret(-1, 0)
+	_set_caret_line(_get_caret_line().erase(_caret.x, 1))
+	queue_redraw()
+
+func _toggle_append():
+	_move_caret(1, 0)
+	_buffer.set_mode(Buffer.Mode.Insert)
+	queue_redraw()
+
+func _append_line():
+	_buffer.content_str.insert(_caret.y + 1, "")
+	_move_caret(0, 1)
+	_buffer.set_mode(Buffer.Mode.Insert)
+	queue_redraw()
+
+func _prepend_line():
+	_buffer.content_str.insert(_caret.y, "")
+	_move_caret(0, -1)
+	_buffer.set_mode(Buffer.Mode.Insert)
+	queue_redraw()
+
+func _physics_process(_delta: float) -> void:
+	_caret_text.text = "(%d,%d)" % [_caret.x, _caret.y]
+
+# Move display by pixels.
 func _move_display(v: Vector2):
 	# TODO: Implement display movement
 	pass
 
-## `chars` can be negative to move to the left, otherwise move to the right.
+# `chars` can be negative to move to the left, otherwise move to the right.
 func _move_display_horizontal_chars(chars: int):
 	# TODO: Implement display movement
 	pass
 
-## `lines` can be negative to move to the top, otherwise move to the bottom.
+# `_buffer.content_str` can be negative to move to the top, otherwise move to the bottom.
 func _move_display_vertical_lines(lines: int):
 	# TODO: Implement display movement
 	pass
@@ -350,245 +244,9 @@ func _move_caret(x: int, y: int):
 	if _caret.y < 0:
 		_caret.y = 0
 
-	if _caret.y > lines.size() - 1:
-		_caret.y = lines.size() - 1
+	if _caret.y > _buffer.content_str.size() - 1:
+		_caret.y = _buffer.content_str.size() - 1
 	# If a caret moves to a new line, the X position will always be at the end,
 	# if overflown
-	if _caret.x > lines[_caret.y].length():
-		_caret.x = lines[_caret.y].length()
-
-enum WriteTarget {
-	Buffer,
-	CmdField,
-}
-
-var _cmd_field_text: String = ""
-
-## Write at current caret position.
-func _write(c: String, target: WriteTarget):
-	assert(c.length() <= 1)
-	if c == "":
-		return
-
-	if indent_mode == IndentMode.Space:
-		c = c.replace("\t", tab_graphic)
-
-	if target == WriteTarget.Buffer:
-		if c == "\n":
-			var remaining = lines[_caret.y].substr(_caret.x)
-			lines[_caret.y] = lines[_caret.y].substr(0, _caret.x)
-			lines.append(remaining)
-			_move_caret(0, 1)
-			_caret.x = 0
-		else:
-			_set_caret_line(lines[_caret.y].insert(_caret.x, c))
-			_move_caret(c.length(), 0)
-		queue_redraw()
-	elif target == WriteTarget.CmdField:
-		_cmd_field_text += c
-		_cmd_text.text = "> %s" % _cmd_field_text
-
-func _get_caret_line() -> String:
-	return lines[_caret.y]
-
-func _set_caret_line(s: String):
-	lines[_caret.y] = s
-
-func _erase_left_char(target: WriteTarget):
-	if target == WriteTarget.Buffer:
-		if _caret == Vector2i.ZERO:
-			return
-
-		if _get_caret_line().length() == 0:
-			lines.remove_at(_caret.y)
-			_move_caret(0, -1)
-			# Put caret to the end of the previous line upon erasing the old
-			# one
-			_caret.x = _get_caret_line().length()
-			queue_redraw()
-			return
-		# We can erase only by positive count, so we move caret to the left by
-		# the required amount, and only then erase.
-		_move_caret(-1, 0)
-		_set_caret_line(_get_caret_line().erase(_caret.x, 1))
-		queue_redraw()
-	elif target == WriteTarget.CmdField:
-		_cmd_field_text = _cmd_field_text.substr(0, _cmd_field_text.length() - 1)
-		_cmd_text.text = "> %s" % _cmd_field_text
-
-func _debug(a_text: String):
-	_debug_text.text = a_text
-
-func _process_keyboard():
-	_is_shift_pressed = Input.is_key_pressed(KEY_SHIFT)
-	_is_ctrl_pressed = Input.is_key_pressed(KEY_CTRL)
-	_is_alt_pressed = Input.is_key_pressed(KEY_ALT)
-
-	if _last_pressed_keycode == -1:
-		for keycode in KEYCODES:
-			if Input.is_key_pressed(keycode):
-				_last_pressed_keycode = keycode
-				return
-		_last_pressed_keycode = -1
-
-func _process_insert():
-	if !WRITABLE_KEYCODES.has(_last_pressed_keycode):
-		_last_pressed_keycode = -1
-		return
-
-	if _last_pressed_keycode == KEY_BACKSPACE:
-		_erase_left_char(WriteTarget.Buffer)
-	else:
-		var c = ""
-		if _is_shift_pressed:
-			c = WRITABLE_KEYCODES[_last_pressed_keycode][1]
-		else:
-			c = WRITABLE_KEYCODES[_last_pressed_keycode][0]
-		_write(c, WriteTarget.Buffer)
-	_last_inp_time = core.time()
-	_last_processed_keycode = _last_pressed_keycode
-	_last_pressed_keycode = -1
-
-func _process_normal():
-	# We block any other actions if we've hit the keychain
-	if _is_keychain_started():
-		_process_normal_keychains()
-	elif _last_pressed_keycode == settings.layout.toggle_cmd_mode:
-		_set_mode(Mode.Cmd)
-		_cmd_text.text = "> "
-		_cmd_text.visible = true
-		_mode_text.visible = false
-	elif _last_pressed_keycode == settings.layout.toggle_insert_mode:
-		_set_mode(Mode.Insert)
-	else:
-		_process_normal_keychains()
-
-	_last_inp_time = core.time()
-	_last_processed_keycode = _last_pressed_keycode
-	_last_pressed_keycode = -1
-
-func _process_normal_keychains():
-	# We wait infinitely for the new keycode while in keychain
-	if _last_pressed_keycode == -1:
-		return
-
-	var _old_keychain_index = _keychain_index
-	var new_possible_keychains = {}
-	for cmd in _possible_keychains.keys():
-		var keychain = _possible_keychains[cmd]
-		if (
-			keychain[_keychain_index] is Shifted
-			&& _is_shift_pressed
-			&& keychain[_keychain_index].keycode == _last_pressed_keycode
-		) || (
-			!(keychain[_keychain_index] is Shifted)
-			&& !_is_shift_pressed
-			&& !_is_ctrl_pressed
-			&& !_is_alt_pressed
-			&& keychain[_keychain_index] == _last_pressed_keycode
-		):
-			# Last hit keychain lead to the final command execution
-			if keychain.size() - 1 == _keychain_index:
-				_exe_cmd(cmd)
-				_reset_keychain()
-				return
-			# Increment only once
-			if new_possible_keychains.size() == 0:
-				_keychain_index += 1
-			new_possible_keychains[cmd] = keychain
-
-	var current_combination = _possible_keychains.values()[0].slice(0, _keychain_index)
-	if new_possible_keychains.size() == 0:
-		print("Unknown combination: ", current_combination)
-		_reset_keychain()
-		return
-	_possible_keychains = new_possible_keychains
-
-func _exe_cmd(cmd: String):
-	if !_cmd_to_fn.has(cmd):
-		print("Not found: ", cmd)
-		return
-	print("Executing: ", cmd)
-	_cmd_to_fn[cmd].call()
-
-func _process_cmd_mode():
-	if _last_pressed_keycode == settings.layout.toggle_cmd_mode:
-		_set_mode(Mode.Normal)
-		_exe_cmd(_cmd_field_text)
-		_cmd_text.visible = false
-		_mode_text.visible = true
-		_cmd_field_text = ""
-		_cmd_text.text = ""
-	elif _last_pressed_keycode == KEY_BACKSPACE:
-		_erase_left_char(WriteTarget.CmdField)
-	else:
-		var c = ""
-		if _is_shift_pressed:
-			c = WRITABLE_KEYCODES[_last_pressed_keycode][1]
-		else:
-			c = WRITABLE_KEYCODES[_last_pressed_keycode][0]
-		_write(c, WriteTarget.CmdField)
-	_last_inp_time = core.time()
-	_last_processed_keycode = _last_pressed_keycode
-	_last_pressed_keycode = -1
-
-func _process_visual():
-	pass
-
-func _physics_process(_delta: float) -> void:
-	_caret_text.text = "(%d,%d)" % [_caret.x, _caret.y]
-	if Input.is_key_pressed(KEY_ESCAPE):
-		get_tree().quit()
-		return
-	_process_keyboard()
-
-	# Prevent too fast input handling
-	if _last_pressed_keycode == -1 || (_last_pressed_keycode == _last_processed_keycode && core.is_cooldown(_last_inp_time, _same_inp_delay)):
-		_last_pressed_keycode = -1
-		return
-
-	if _mode == Mode.Insert:
-		if _last_pressed_keycode == settings.layout.toggle_insert_mode:
-			if !_await_next_insert_escape:
-				_await_next_insert_escape = true
-			else:
-				# Erase last written `i` symbols
-				_erase_left_char(WriteTarget.Buffer)
-				_set_mode(Mode.Normal)
-				_await_next_insert_escape = false
-				_last_inp_time = core.time()
-				_last_processed_keycode = _last_pressed_keycode
-				_last_pressed_keycode = -1
-				return
-		else:
-			_await_next_insert_escape = false
-
-	match _mode:
-		Mode.Normal:
-			_process_normal()
-		Mode.Cmd:
-			_process_cmd_mode()
-		Mode.Insert:
-			_process_insert()
-		Mode.Visual:
-			_process_visual()
-
-func _toggle_open():
-	pass
-
-func _toggle_append():
-	_move_caret(1, 0)
-	_set_mode(Mode.Insert)
-	queue_redraw()
-
-func _append_line():
-	lines.insert(_caret.y + 1, "")
-	_move_caret(0, 1)
-	_set_mode(Mode.Insert)
-	queue_redraw()
-
-func _prepend_line():
-	lines.insert(_caret.y, "")
-	_move_caret(0, -1)
-	_set_mode(Mode.Insert)
-	queue_redraw()
+	if _caret.x > _buffer.content_str[_caret.y].length():
+		_caret.x = _buffer.content_str[_caret.y].length()

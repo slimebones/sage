@@ -19,12 +19,14 @@ config/icon="res://icon.svg"
 [autoload]
 
 core="*res://engine/core.gd"
+err="*res://engine/err.gd"
 orwynn="*res://engine/orwynn.gd"
 uuid="*res://engine/uuid.gd"
+path="*res://engine/path.gd"
+common="*res://common.gd"
 
 [display]
 
-window/size/borderless=true
 window/stretch/mode="viewport"
 window/ios/allow_high_refresh_rate=false
 
