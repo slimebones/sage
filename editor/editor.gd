@@ -56,8 +56,11 @@ func disconnect_buf():
 func _read_new_file(file: FileAccess):
 	_buf.content_str = file.get_as_text().split("\n")
 
-func on_file_open(file: FileAccess):
+func on_file_opened(file: FileAccess):
 	_read_new_file(file)
+
+func on_file_closing(_file: FileAccess):
+	pass
 
 func on_mode_changed(old_mode: Buf.Mode, new_mode: Buf.Mode):
 	match old_mode:

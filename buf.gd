@@ -57,10 +57,9 @@ var _cmd_field_text: String = ""
 
 func open_file(a_path: String):
 	if content_file != null:
+		_processor.on_file_closing(content_file)
 		content_file.close()
-
 	content_path = a_path
-	content_file = FileAccess.open(a_path, FileAccess.READ_WRITE)
 
 	var content_ext = path.get_ext(content_path)
 	if content_ext == "" || !common.config.buf_content_processor_scenes.has(content_ext):
@@ -70,13 +69,17 @@ func open_file(a_path: String):
 	# Don't reinitialize the processor if it's the same.
 	if !_new_processor_scene.is_class(_processor.get_class()):
 		connect_processor(_new_processor_scene)
-	_processor.on_file_open(content_file)
 
-func connect_processor(a_processor: Node):
+	content_file = FileAccess.open(a_path, FileAccess.READ_WRITE)
+	_processor.on_file_opened.call_deferred(content_file)
+
+func connect_processor(a_processor_scene: PackedScene):
 	if _processor != null:
 		_processor.disconnect_buf(null)
-	_processor = a_processor
-	_processor.connect_buf(self)
+		_processor.queue_free()
+	_processor = a_processor_scene.instantiate()
+	add_child.call_deferred(_processor)
+	_processor.connect_buf.call_deferred(self)
 
 func debug(a_text: String):
 	_debug_text.text = a_text
