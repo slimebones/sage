@@ -8,7 +8,7 @@ class_name Buf
 @export var _cmd_text: Label
 @export var _debug_text: Label
 
-# Modes carry the general idea of working with buffer's content, but can be
+# Modes carry the general idea of working with buf's content, but can be
 # implemented differently per content's processor choice.
 enum Mode {
 	Normal,
@@ -22,7 +22,7 @@ enum ContentType {
 	Bytes,
 }
 
-# Path to file opened within buffer where the content fetched from.
+# Path to file opened within buf where the content fetched from.
 var content_path: String = ""
 var content_type: ContentType
 # We use arrays for all content representations, since it's convenient,
@@ -51,9 +51,9 @@ var _cmd_field_text: String = ""
 
 func connect_processor(a_processor: Node):
 	if _processor != null:
-		_processor.set_buffer(null)
+		_processor.set_buf(null)
 	_processor = a_processor
-	_processor.set_buffer(self)
+	_processor.set_buf(self)
 
 func debug(a_text: String):
 	_debug_text.text = a_text
@@ -64,7 +64,7 @@ func _ready() -> void:
 	content_str = [""]
 	connect_processor($Editor)
 
-	# All buffers start in normal mode
+	# All bufs start in normal mode
 	set_mode(Mode.Normal, true)
 	_reset_keychain()
 

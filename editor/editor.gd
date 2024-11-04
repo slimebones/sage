@@ -41,10 +41,10 @@ var line_sizes: PackedInt64Array = []
 var line_y_poses: PackedFloat64Array = []
 var normal_cursor_size: Vector2 = Vector2(10, -20)
 var insert_cursor_size: Vector2 = Vector2(1, -20)
-var _buffer: Buf = null
+var _buf: Buf = null
 
-func set_buffer(a_buffer: Buf):
-	_buffer = a_buffer
+func set_buf(a_buf: Buf):
+	_buf = a_buf
 
 func on_mode_changed(old_mode: Buf.Mode, new_mode: Buf.Mode):
 	match old_mode:
@@ -64,7 +64,7 @@ func on_key_pressed(
 ):
 	if mode == Buf.Mode.Insert:
 		if !common.config.layout.writables.has(key):
-			assert(_buffer != null)
+			assert(_buf != null)
 			return Buf.ProcessorFlag.KeyReset
 		if is_ctrl_pressed || is_alt_pressed:
 			return
@@ -90,10 +90,10 @@ func execute_cmd(cmd: String):
 # Draws cursor at caret position.
 func _draw_cursor():
 	var caret_pos = _get_caret_pos()
-	if _buffer.get_mode() == Buf.Mode.Insert:
+	if _buf.get_mode() == Buf.Mode.Insert:
 		var rect: Rect2 = Rect2(caret_pos, insert_cursor_size)
 		draw_rect(rect, Color(1, 1, 1, 1))
-	elif _buffer.get_mode() == Buf.Mode.Normal:
+	elif _buf.get_mode() == Buf.Mode.Normal:
 		var rect: Rect2 = Rect2(caret_pos, normal_cursor_size)
 		draw_rect(rect, Color(1, 1, 1, 0.5))
 
@@ -124,7 +124,7 @@ func _draw() -> void:
 	var lineno = 1
 	line_sizes = []
 	line_y_poses = []
-	for line in _buffer.content_str:
+	for line in _buf.content_str:
 		draw_string(
 			_font,
 			Vector2(
@@ -145,9 +145,9 @@ func _draw() -> void:
 		draw_string(_font, pos, line_to_draw, HORIZONTAL_ALIGNMENT_CENTER, -1, _font_size)
 
 		var line_size = line.length()
-		if lineno < _buffer.content_str.size():
+		if lineno < _buf.content_str.size():
 			# Count+Write newline sign
-			_buffer.content_str[lineno - 1] += "\n"
+			_buf.content_str[lineno - 1] += "\n"
 			line_size += 1
 		line_sizes.append(line_size)
 
@@ -166,28 +166,28 @@ func _write(c: String):
 		c = c.replace("\t", tab_graphic)
 
 	if c == "\n":
-		var remaining = _buffer.content_str[_caret.y].substr(_caret.x)
-		_buffer.content_str[_caret.y] = _buffer.content_str[_caret.y].substr(0, _caret.x)
-		_buffer.content_str.append(remaining)
+		var remaining = _buf.content_str[_caret.y].substr(_caret.x)
+		_buf.content_str[_caret.y] = _buf.content_str[_caret.y].substr(0, _caret.x)
+		_buf.content_str.append(remaining)
 		_move_caret(0, 1)
 		_caret.x = 0
 	else:
-		_set_caret_line(_buffer.content_str[_caret.y].insert(_caret.x, c))
+		_set_caret_line(_buf.content_str[_caret.y].insert(_caret.x, c))
 		_move_caret(c.length(), 0)
 	queue_redraw()
 
 func _get_caret_line() -> String:
-	return _buffer.content_str[_caret.y]
+	return _buf.content_str[_caret.y]
 
 func _set_caret_line(s: String):
-	_buffer.content_str[_caret.y] = s
+	_buf.content_str[_caret.y] = s
 
 func _erase_left_char():
 	if _caret == Vector2i.ZERO:
 		return
 
 	if _get_caret_line().length() == 0:
-		_buffer.content_str.remove_at(_caret.y)
+		_buf.content_str.remove_at(_caret.y)
 		_move_caret(0, -1)
 		# Put caret to the end of the previous line upon erasing the old
 		# one
@@ -202,19 +202,19 @@ func _erase_left_char():
 
 func _toggle_append():
 	_move_caret(1, 0)
-	_buffer.set_mode(Buf.Mode.Insert)
+	_buf.set_mode(Buf.Mode.Insert)
 	queue_redraw()
 
 func _append_line():
-	_buffer.content_str.insert(_caret.y + 1, "")
+	_buf.content_str.insert(_caret.y + 1, "")
 	_move_caret(0, 1)
-	_buffer.set_mode(Buf.Mode.Insert)
+	_buf.set_mode(Buf.Mode.Insert)
 	queue_redraw()
 
 func _prepend_line():
-	_buffer.content_str.insert(_caret.y, "")
+	_buf.content_str.insert(_caret.y, "")
 	_move_caret(0, -1)
-	_buffer.set_mode(Buf.Mode.Insert)
+	_buf.set_mode(Buf.Mode.Insert)
 	queue_redraw()
 
 func _physics_process(_delta: float) -> void:
@@ -230,7 +230,7 @@ func _move_display_horizontal_chars(chars: int):
 	# TODO: Implement display movement
 	pass
 
-# `_buffer.content_str` can be negative to move to the top, otherwise move to the bottom.
+# `_buf.content_str` can be negative to move to the top, otherwise move to the bottom.
 func _move_display_vertical_lines(lines: int):
 	# TODO: Implement display movement
 	pass
@@ -244,9 +244,9 @@ func _move_caret(x: int, y: int):
 	if _caret.y < 0:
 		_caret.y = 0
 
-	if _caret.y > _buffer.content_str.size() - 1:
-		_caret.y = _buffer.content_str.size() - 1
+	if _caret.y > _buf.content_str.size() - 1:
+		_caret.y = _buf.content_str.size() - 1
 	# If a caret moves to a new line, the X position will always be at the end,
 	# if overflown
-	if _caret.x > _buffer.content_str[_caret.y].length():
-		_caret.x = _buffer.content_str[_caret.y].length()
+	if _caret.x > _buf.content_str[_caret.y].length():
+		_caret.x = _buf.content_str[_caret.y].length()
