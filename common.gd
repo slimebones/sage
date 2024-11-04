@@ -11,7 +11,7 @@ class Config:
 	}
 
 var config = Config.new()
-var data_dir = "~/.sage"
+var data_dir = "C:/Users/thed4/.sage"
 var var_dir = data_dir.path_join("var")
 
 # Opens file relative to var dir
