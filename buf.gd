@@ -49,7 +49,7 @@ var _last_processed_keycode: int = -1
 var _last_pressed_keycode: int = -1
 var _await_next_insert_escape: bool = false
 var _last_inp_time: int = 0
-var _same_inp_delay: int = 100
+var _same_inp_delay: int = 200
 var _keychain_index: int = 0
 var _possible_keychains = {}
 
@@ -71,18 +71,17 @@ func open_file(a_path: String):
 	var _new_processor_key = \
 		common.config.content_ext_to_processor_key[content_ext]
 	# Don't reinitialize the processor if it's the same.
-	if _processor.key != _new_processor_key:
+	if _processor.processor_key != _new_processor_key:
 		connect_processor(_new_processor_key)
 	_processor.open_file(a_path)
 
 func connect_processor(key: String):
-	var new_processor_scene = \
-		common.config.content_ext_to_processor_key[key]
+	var new_processor_scene = common.config.processor_scenes[key]
 	if _processor != null:
 		_processor.disconnect_buf()
 		_processor.queue_free()
 	_processor = new_processor_scene.instantiate()
-	_processor.key = key
+	_processor.processor_key = key
 	add_child(_processor)
 	_processor.connect_buf(self)
 
@@ -133,6 +132,7 @@ func _process_normal_keychains():
 
 	var _old_keychain_index = _keychain_index
 	var new_possible_keychains = {}
+	var should_inc_keychain = false
 	for cmd in _possible_keychains.keys():
 		var keychain = _possible_keychains[cmd]
 		# Since we increase keychain index before processing the
@@ -158,29 +158,32 @@ func _process_normal_keychains():
 				_reset_keychain()
 				return
 			# Increment only once
-			if new_possible_keychains.size() == 0:
-				_keychain_index += 1
+			should_inc_keychain = true
 			new_possible_keychains[cmd] = keychain
 
-	var current_combination = _possible_keychains.values()[0].slice(0, _keychain_index)
+	if should_inc_keychain:
+		_keychain_index += 1
+
 	if new_possible_keychains.size() == 0:
-		print("Unknown combination: ", current_combination)
+		# var current_combination = _possible_keychains.values()[0].slice(0, _keychain_index + 1)
+		# print("Unknown combination: ", current_combination)
 		_reset_keychain()
 		return
 	_possible_keychains = new_possible_keychains
 
 # Buffer-specific commands - don't send to processor.
 var _cmds = {
-	"open_file": _toggle_open_file_window,
+	"open_file": _prompt_open_file,
 	"write_file": _write_file,
 }
 
 func _write_file():
 	if content_file == null:
-		# TODO: toggle write location input box
+		# TODO: toggle write location prompt
 		return
+	_processor.write_file(content_file)
 
-func _toggle_open_file_window():
+func _prompt_open_file():
 	open_file(common.var_dir.path_join("assets/test.txt"))
 
 func _execute_cmd(cmd: String):
@@ -279,7 +282,7 @@ func _process_insert_mode():
 	_last_processed_keycode = _last_pressed_keycode
 	_last_pressed_keycode = -1
 
-func _physics_process(_delta: float) -> void:
+func _process(_delta: float) -> void:
 	if Input.is_key_pressed(KEY_ESCAPE):
 		get_tree().quit()
 		return

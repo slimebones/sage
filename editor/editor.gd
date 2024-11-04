@@ -32,7 +32,7 @@ enum IndentMode {
     Tab,
     Space,
 }
-var key: String
+var processor_key: String
 var indent_mode: IndentMode = IndentMode.Tab
 var tab_graphic: StringName = "    "
 
@@ -50,6 +50,7 @@ func connect_buf(a_buf: Buf):
         _buf.content_str = [""]
     else:
         _read_new_file(_buf.content_file)
+    queue_redraw()
 
 func disconnect_buf():
     _buf = null
@@ -57,9 +58,13 @@ func disconnect_buf():
 func open_file(a_path: String):
     _buf.content_file = FileAccess.open(a_path, FileAccess.READ_WRITE)
     _read_new_file(_buf.content_file)
+    queue_redraw()
 
 func write_file(file: FileAccess):
-    file.store_string("\n".join(_buf.content_str))
+    var s = "\n".join(_buf.content_str)
+    file.resize(0)
+    file.seek(0)
+    file.store_string(s)
     file.flush()
 
 func close_file(file: FileAccess):
@@ -107,7 +112,8 @@ func execute_cmd(cmd: String):
     return ""
 
 func _read_new_file(file: FileAccess):
-    _buf.content_str = file.get_as_text().split("\n")
+    _caret = Vector2i.ZERO
+    _buf.content_str = PackedStringArray(file.get_as_text(true).split("\n"))
 
 # Draws cursor at caret position.
 func _draw_cursor():
@@ -167,10 +173,10 @@ func _draw() -> void:
         draw_string(_font, pos, line_to_draw, HORIZONTAL_ALIGNMENT_CENTER, -1, _font_size)
 
         var line_size = line.length()
-        if lineno < _buf.content_str.size():
-            # Count+Write newline sign
-            _buf.content_str[lineno - 1] += "\n"
-            line_size += 1
+        # if lineno < _buf.content_str.size():
+        #     # Count+Write newline sign
+        #     _buf.content_str[lineno - 1] += "\n"
+        #     line_size += 1
         line_sizes.append(line_size)
 
         pos.y += line_spacing
