@@ -56,37 +56,42 @@ var _possible_keychains = {}
 var _cmd_field_text: String = ""
 
 func open_file(a_path: String):
+	# Do nothing if the target path is the same.
+	if content_path == a_path:
+		return
+	if !FileAccess.file_exists(a_path):
+		return err.err("No file %s" % a_path, err.CODE_NOT_FOUND_ERR)
 	if content_file != null:
-		_processor.on_file_closing(content_file)
-		content_file.close()
+		_processor.close_file(content_file)
 	content_path = a_path
 
 	var content_ext = path.get_ext(content_path)
-	if content_ext == "" || !common.config.buf_content_processor_scenes.has(content_ext):
+	if content_ext == "" || !common.config.content_ext_to_processor_key.has(content_ext):
 		content_ext = "_default"
-	var _new_processor_scene = \
-		common.config.buf_content_processor_scenes[content_ext]
+	var _new_processor_key = \
+		common.config.content_ext_to_processor_key[content_ext]
 	# Don't reinitialize the processor if it's the same.
-	if !_new_processor_scene.is_class(_processor.get_class()):
-		connect_processor(_new_processor_scene)
+	if _processor.key != _new_processor_key:
+		connect_processor(_new_processor_key)
+	_processor.open_file(a_path)
 
-	content_file = FileAccess.open(a_path, FileAccess.READ_WRITE)
-	_processor.on_file_opened.call_deferred(content_file)
-
-func connect_processor(a_processor_scene: PackedScene):
+func connect_processor(key: String):
+	var new_processor_scene = \
+		common.config.content_ext_to_processor_key[key]
 	if _processor != null:
 		_processor.disconnect_buf()
 		_processor.queue_free()
-	_processor = a_processor_scene.instantiate()
-	add_child.call_deferred(_processor)
-	_processor.connect_buf.call_deferred(self)
+	_processor = new_processor_scene.instantiate()
+	_processor.key = key
+	add_child(_processor)
+	_processor.connect_buf(self)
 
 func debug(a_text: String):
 	_debug_text.text = a_text
 
 func _ready() -> void:
 	# All bufs start in normal mode, with default processor
-	connect_processor(common.config.buf_content_processor_scenes["_default"])
+	connect_processor(common.config.content_ext_to_processor_key["_default"])
 	set_mode(Mode.Normal, true)
 	_reset_keychain()
 
@@ -166,10 +171,16 @@ func _process_normal_keychains():
 
 # Buffer-specific commands - don't send to processor.
 var _cmds = {
-	"open": _toggle_open_window,
+	"open_file": _toggle_open_file_window,
+	"write_file": _write_file,
 }
 
-func _toggle_open_window():
+func _write_file():
+	if content_file == null:
+		# TODO: toggle write location input box
+		return
+
+func _toggle_open_file_window():
 	open_file(common.var_dir.path_join("assets/test.txt"))
 
 func _execute_cmd(cmd: String):
@@ -182,7 +193,7 @@ func _execute_cmd(cmd: String):
 
 	if err.ee(r):
 		print("Error: ", r.msg)
-	elif r != "":
+	elif r != null && r != "":
 		print(r)
 
 func _process_normal_mode():

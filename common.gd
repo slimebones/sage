@@ -6,8 +6,11 @@ class Config:
 
 	var layout: Inp.Layout = Inp.Layout.new()
 	var editor: Editor.Config = Editor.Config.new()
-	var buf_content_processor_scenes = {
-		"_default": _editor_processor_scene,
+	var processor_scenes = {
+		"editor": _editor_processor_scene,
+	}
+	var content_ext_to_processor_key = {
+		"_default": "editor",
 	}
 
 var config = Config.new()
