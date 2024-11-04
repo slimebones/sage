@@ -25,7 +25,7 @@ grow_horizontal = 2
 grow_vertical = 2
 texture = ExtResource("2_boaja")
 
-[node name="Buffer" type="Control" parent="." node_paths=PackedStringArray("_mode_text", "_cmd_text", "_debug_text")]
+[node name="Buf" type="Control" parent="." node_paths=PackedStringArray("_mode_text", "_cmd_text", "_debug_text")]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -38,7 +38,7 @@ _mode_text = NodePath("../Info/Mode")
 _cmd_text = NodePath("../Info/Cmd")
 _debug_text = NodePath("../Info/Debug")
 
-[node name="Editor" type="Control" parent="Buffer" node_paths=PackedStringArray("_caret_text")]
+[node name="Editor" type="Control" parent="Buf" node_paths=PackedStringArray("_caret_text")]
 layout_mode = 2
 anchors_preset = 0
 offset_left = 60.1312
