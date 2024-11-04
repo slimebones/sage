@@ -1,7 +1,7 @@
-run: compile
-    @ ./bin/file.exe
-
 compile:
+    @ rm -rf bin
     @ mkdir bin
-    @ cc file.c -o bin/file.exe
+    @ gcc file.c -std=c11 -c -I../../addons/godot-headers file.c
+    @ mv file.o bin/
+    @ gcc -shared bin/file.o -o bin/libfile.dll
 
