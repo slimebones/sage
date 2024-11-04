@@ -1,7 +1,6 @@
-[gd_scene load_steps=8 format=3 uid="uid://cuw7jqy236alw"]
+[gd_scene load_steps=7 format=3 uid="uid://cuw7jqy236alw"]
 
 [ext_resource type="Script" path="res://main.gd" id="1_waxqj"]
-[ext_resource type="Script" path="res://editor/editor.gd" id="1_yojct"]
 [ext_resource type="Texture2D" uid="uid://bnm4esg6hxf68" path="res://assets/black.png" id="2_boaja"]
 [ext_resource type="Script" path="res://buf.gd" id="3_yg4kr"]
 [ext_resource type="FontFile" uid="uid://bct236saktyd" path="res://assets/monogram.ttf" id="4_56gcg"]
@@ -37,18 +36,6 @@ script = ExtResource("3_yg4kr")
 _mode_text = NodePath("../Info/Mode")
 _cmd_text = NodePath("../Info/Cmd")
 _debug_text = NodePath("../Info/Debug")
-
-[node name="Editor" type="Control" parent="Buf" node_paths=PackedStringArray("_caret_text")]
-layout_mode = 2
-anchors_preset = 0
-offset_left = 60.1312
-offset_top = 46.6872
-offset_right = 60.1312
-offset_bottom = 46.6872
-grow_horizontal = 2
-grow_vertical = 2
-script = ExtResource("1_yojct")
-_caret_text = NodePath("../../Info/CaretText")
 
 [node name="Info" type="HBoxContainer" parent="."]
 anchors_preset = 2

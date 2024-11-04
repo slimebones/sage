@@ -6,6 +6,24 @@ class Layout:
 	var toggle_visual_mode: int = KEY_V
 	var toggle_insert_mode: int = KEY_I
 
+	# Binds that invoke commands. Works only in normal mode.
+	# We only allow one bind per command for simplicity and
+	# straightforwardness.
+	#
+	# Once the editor is in keychain flag, and in normal mode, it accepts
+	# combinations in strict order, unless they have no continuation, or lead
+	# to the final command.
+	var keychains = {
+		"left": [KEY_J],
+		"down": [KEY_K],
+		"up": [KEY_L],
+		"right": [KEY_SEMICOLON],
+		"open": [KEY_SPACE, KEY_O],
+		"append": [KEY_A],
+		"append_line": [KEY_O],
+		"prepend_line": [Shifted.new(KEY_O)],
+	}
+
 	# Second symbol is shifted.
 	var writables = {
 		KEY_QUOTELEFT: ["`", "~"],
@@ -66,23 +84,6 @@ class Layout:
 		KEY_SPACE: [" ", " "],
 	}
 
-	# Binds that invoke commands. Works only in normal mode.
-	# We only allow one bind per command for simplicity and
-	# straightforwardness.
-	#
-	# Once the editor is in keychain flag, and in normal mode, it accepts
-	# combinations in strict order, unless they have no continuation, or lead
-	# to the final command.
-	var keychains = {
-		"left": [KEY_J],
-		"down": [KEY_K],
-		"up": [KEY_L],
-		"right": [KEY_SEMICOLON],
-		"open": [KEY_SPACE, KEY_O],
-		"append": [KEY_A],
-		"append_line": [KEY_O],
-		"prepend_line": [Shifted.new(KEY_O)],
-	}
 
 class Shifted:
 	var keycode: int = -1

@@ -1,7 +1,6 @@
 extends Control
 class_name Editor
 
-@export var _caret_text: Label
 @onready var _font = preload("res://assets/monogram.ttf")
 
 class Config:
@@ -43,8 +42,22 @@ var normal_cursor_size: Vector2 = Vector2(10, -20)
 var insert_cursor_size: Vector2 = Vector2(1, -20)
 var _buf: Buf = null
 
-func set_buf(a_buf: Buf):
+func connect_buf(a_buf: Buf):
 	_buf = a_buf
+	_buf.content_type = Buf.ContentType.Str
+	if _buf.content_file == null:
+		_buf.content_str = [""]
+	else:
+		_read_new_file(_buf.content_file)
+
+func disconnect_buf():
+	_buf = null
+
+func _read_new_file(file: FileAccess):
+	_buf.content_str = file.get_as_text().split("\n")
+
+func on_file_open(file: FileAccess):
+	_read_new_file(file)
 
 func on_mode_changed(old_mode: Buf.Mode, new_mode: Buf.Mode):
 	match old_mode:
@@ -216,9 +229,6 @@ func _prepend_line():
 	_move_caret(0, -1)
 	_buf.set_mode(Buf.Mode.Insert)
 	queue_redraw()
-
-func _physics_process(_delta: float) -> void:
-	_caret_text.text = "(%d,%d)" % [_caret.x, _caret.y]
 
 # Move display by pixels.
 func _move_display(v: Vector2):

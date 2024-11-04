@@ -22,8 +22,13 @@ enum ContentType {
 	Bytes,
 }
 
-# Path to file opened within buf where the content fetched from.
+# Path to content_file opened within buf where the content is fetched from.
 var content_path: String = ""
+# Opened content_file for a buffer. Buffer opens a content_file as soon as it gets a path.
+# The opening mode, for now, is always FileAccess.READ_WRITE.
+# But buffer never reads the content_file to fill it's content_type, content_str,
+# content_bytes, etc., to give such an opportunity to processor
+var content_file: FileAccess = null
 var content_type: ContentType
 # We use arrays for all content representations, since it's convenient,
 # especially for editors.
@@ -33,6 +38,7 @@ var content_str: PackedStringArray = []
 var content_bytes: PackedByteArray = []
 
 var _mode: Mode
+var _buf_num: int = 1
 var is_active: bool = false
 var _processor: Node = null
 
@@ -49,22 +55,35 @@ var _possible_keychains = {}
 
 var _cmd_field_text: String = ""
 
+func open_file(a_path: String):
+	if content_file != null:
+		content_file.close()
+
+	content_path = a_path
+	content_file = FileAccess.open(a_path, FileAccess.READ_WRITE)
+
+	var content_ext = path.get_ext(content_path)
+	if content_ext == "" || !common.config.buf_content_processor_scenes.has(content_ext):
+		content_ext = "_default"
+	var _new_processor_scene = \
+		common.config.buf_content_processor_scenes[content_ext]
+	# Don't reinitialize the processor if it's the same.
+	if !_new_processor_scene.is_class(_processor.get_class()):
+		connect_processor(_new_processor_scene)
+	_processor.on_file_open(content_file)
+
 func connect_processor(a_processor: Node):
 	if _processor != null:
-		_processor.set_buf(null)
+		_processor.disconnect_buf(null)
 	_processor = a_processor
-	_processor.set_buf(self)
+	_processor.connect_buf(self)
 
 func debug(a_text: String):
 	_debug_text.text = a_text
 
 func _ready() -> void:
-	# TMP, connect editor by default
-	content_type = ContentType.Str
-	content_str = [""]
-	connect_processor($Editor)
-
-	# All bufs start in normal mode
+	# All bufs start in normal mode, with default processor
+	connect_processor(common.config.buf_content_processor_scenes["_default"])
 	set_mode(Mode.Normal, true)
 	_reset_keychain()
 
@@ -76,7 +95,7 @@ func set_mode(a_mode: Mode, should_callback_processor: bool = false):
 		return
 	var old_mode = _mode
 	_mode = a_mode
-	_mode_text.text = _str_mode()
+	_mode_text.text = "#%d: %s" % [_buf_num, _str_mode()]
 	if should_callback_processor && _processor != null:
 		_processor.on_mode_changed(old_mode, _mode)
 	queue_redraw()
@@ -142,8 +161,22 @@ func _process_normal_keychains():
 		return
 	_possible_keychains = new_possible_keychains
 
+# Buffer-specific commands - don't send to processor.
+var _cmds = {
+	"open": _toggle_open_window,
+}
+
+func _toggle_open_window():
+	open_file(common.var_dir.path_join("assets/test.txt"))
+
 func _execute_cmd(cmd: String):
-	var r = _processor.execute_cmd(cmd)
+	var r
+
+	if _cmds.has(cmd):
+		r =_cmds[cmd].call()
+	else:
+		r = _processor.execute_cmd(cmd)
+
 	if err.ee(r):
 		print("Error: ", r.msg)
 	elif r != "":
