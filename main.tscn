@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" path="res://main.gd" id="1_waxqj"]
 [ext_resource type="Texture2D" uid="uid://bnm4esg6hxf68" path="res://assets/black.png" id="2_boaja"]
-[ext_resource type="Script" path="res://buf.gd" id="3_yg4kr"]
+[ext_resource type="PackedScene" uid="uid://blrps1y1rfoj2" path="res://buf.tscn" id="3_fid2e"]
 [ext_resource type="FontFile" uid="uid://bct236saktyd" path="res://assets/monogram.ttf" id="4_56gcg"]
 
 [sub_resource type="LabelSettings" id="LabelSettings_dafbl"]
@@ -24,18 +24,7 @@ grow_horizontal = 2
 grow_vertical = 2
 texture = ExtResource("2_boaja")
 
-[node name="Buf" type="Control" parent="." node_paths=PackedStringArray("_mode_text", "_cmd_text", "_debug_text")]
-layout_mode = 3
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-scale = Vector2(1.01445, 1.0067)
-script = ExtResource("3_yg4kr")
-_mode_text = NodePath("../Info/Mode")
-_cmd_text = NodePath("../Info/Cmd")
-_debug_text = NodePath("../Info/Debug")
+[node name="Buf_1" parent="." instance=ExtResource("3_fid2e")]
 
 [node name="Info" type="HBoxContainer" parent="."]
 anchors_preset = 2
@@ -57,7 +46,7 @@ label_settings = SubResource("LabelSettings_dafbl")
 [node name="Mode" type="Label" parent="Info"]
 layout_mode = 2
 size_flags_horizontal = 4
-text = "Normal"
+text = "#1: Normal"
 label_settings = SubResource("LabelSettings_dafbl")
 
 [node name="Debug" type="Label" parent="Info"]

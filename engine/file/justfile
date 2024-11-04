@@ -1,0 +1,7 @@
+run: compile
+    @ ./bin/file.exe
+
+compile:
+    @ mkdir bin
+    @ cc file.c -o bin/file.exe
+

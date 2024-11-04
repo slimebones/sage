@@ -4,9 +4,9 @@
 extends Control
 class_name Buf
 
-@export var _mode_text: Label
-@export var _cmd_text: Label
-@export var _debug_text: Label
+@onready var _mode_text: Label = core.find("Info/Mode")
+@onready var _cmd_text: Label = core.find("Info/Cmd")
+@onready var _debug_text: Label = core.find("Info/Debug")
 
 # Modes carry the general idea of working with buf's content, but can be
 # implemented differently per content's processor choice.
@@ -75,7 +75,7 @@ func open_file(a_path: String):
 
 func connect_processor(a_processor_scene: PackedScene):
 	if _processor != null:
-		_processor.disconnect_buf(null)
+		_processor.disconnect_buf()
 		_processor.queue_free()
 	_processor = a_processor_scene.instantiate()
 	add_child.call_deferred(_processor)
