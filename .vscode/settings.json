@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "buffer.h": "c",
+        "raylib.h": "c",
+        "utils.h": "c"
+    }
+}

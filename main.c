@@ -1,20 +1,21 @@
 #include "raylib.h"
+#include "utils.h"
 #include "buffer.h"
 
 Font font;
-
-void draw() {
-    ClearBackground(BLACK);
-    Vector2 position;
-    position.x = 0;
-    position.y = 0;
-    DrawTextEx(
-        font,
-        "check this font out dude\nnewline",
-        position,
-        font.baseSize*0.75,
-        1,
-        WHITE);
+void update() {
+    // ClearBackground(BLACK);
+    // Vector2 position;
+    // position.x = 0;
+    // position.y = 0;
+    // DrawTextEx(
+    //     font,
+    //     "check this font out dude\nnewline",
+    //     position,
+    //     font.baseSize*0.75,
+    //     1,
+    //     WHITE
+    // );
 }
 
 int main() {
@@ -27,7 +28,7 @@ int main() {
     font = LoadFont("static/inconsolata/variable.ttf");
     while (!WindowShouldClose()) {
         BeginDrawing();
-            draw();
+            update();
         EndDrawing();
     }
     CloseWindow();

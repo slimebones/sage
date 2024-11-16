@@ -1,7 +1,7 @@
 set shell := ["nu", "-c"]
 
-SOURCES := "main.c buffer/buffer.c"
-INCLUDES := "-Ilib/raylib/include -Ibuffer"
+SOURCES := "main.c buffer/buffer.c editor/editor.c"
+INCLUDES := "-Ilib/raylib/include -Ibuffer -Ieditor"
 LIBS := "-Llib -l:raylib/lib/raylib.dll -lgdi32 -lwinmm"
 
 run: compile
