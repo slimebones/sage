@@ -8,3 +8,9 @@ void UpdateBuffer(Buffer *buffer) {
 
 void DeselectBuffer(Buffer *buffer) {
 }
+
+void OpenBufferFile(char *path) {
+}
+
+void CloseBufferFile() {
+}

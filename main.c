@@ -3,7 +3,12 @@
 #include "buffer.h"
 
 Font font;
+Buffer* selectedBuffer = nil;
+
 void update() {
+}
+
+void draw() {
     // ClearBackground(BLACK);
     // Vector2 position;
     // position.x = 0;
@@ -27,8 +32,10 @@ int main() {
 
     font = LoadFont("static/inconsolata/variable.ttf");
     while (!WindowShouldClose()) {
+        update();
+
         BeginDrawing();
-            update();
+            draw();
         EndDrawing();
     }
     CloseWindow();
