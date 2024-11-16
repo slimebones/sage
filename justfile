@@ -1,9 +1,13 @@
 set shell := ["nu", "-c"]
 
+SOURCES := "main.c buffer/buffer.c"
+INCLUDES := "-Ilib/raylib/include -Ibuffer"
+LIBS := "-Llib -l:raylib/lib/raylib.dll -lgdi32 -lwinmm"
+
 run: compile
     @ ./bin/main
 
 compile:
     @ mkdir bin
-    @ gcc -Ilib/raylib/include -Llib -l:raylib/lib/raylib.dll -lgdi32 -lwinmm -o bin/main main.c
+    @ gcc {{INCLUDES}} {{LIBS}} -o bin/main {{SOURCES}}
     @ cp lib/raylib/lib/raylib.dll bin/raylib.dll

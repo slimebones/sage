@@ -1,4 +1,5 @@
 #include "raylib.h"
+#include "buffer.h"
 
 Font font;
 
