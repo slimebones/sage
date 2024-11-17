@@ -34,19 +34,46 @@ void draw() {
 }
 
 typedef struct IniConfig {
-    const char* space;
-    const char* q;
+    LangLayouts* langLayouts;
 } IniConfig;
 
 static int iniHandler(void* user, const char* section, const char* name, const char* value) {
     IniConfig* config = (IniConfig*)user;
-    printf("%s %s %s\n", section, name, value);
+    if (strcmp(section, ""))
+    config->langLayouts->en->writables;
     return 0;
 }
 
+u64 charHash(const void* item, u64 seed0, u64 seed1) {
+    const char* target = item;
+    return hashmap_sip(target, strlen(target), seed0, seed1);
+}
+
+int charCompare(const void* a, const void* b, void* udata) {
+    return strcmp(a, b);
+}
+
 Code parseAppIni() {
-    IniConfig iniConfig;
-    int r = ini_parse(APPINI_PATH, iniHandler, &iniConfig);
+    IniConfig* config = malloc(sizeof(struct IniConfig));
+
+    // Allocate config fields.
+    config->langLayouts = malloc(sizeof(struct LangLayouts));
+    config->langLayouts->en = malloc(sizeof(struct LangLayouts));
+    config->langLayouts->en->writables = malloc(sizeof(struct LayoutWritables));
+    config->langLayouts->en->normal = hashmap_new(
+        sizeof(char*), 0, 0, 0, charHash, charCompare, nil, nil
+    );
+    config->langLayouts->en->insert = hashmap_new(
+        sizeof(char*), 0, 0, 0, charHash, charCompare, nil, nil
+    );
+    config->langLayouts->en->visual = hashmap_new(
+        sizeof(char*), 0, 0, 0, charHash, charCompare, nil, nil
+    );
+    config->langLayouts->en->command = hashmap_new(
+        sizeof(char*), 0, 0, 0, charHash, charCompare, nil, nil
+    );
+
+    int r = ini_parse(APPINI_PATH, iniHandler, config);
     if (r < 0) {
         printf("[E] Can't load `%s`. (Code %d)\n", APPINI_PATH, -1);
         return Error;

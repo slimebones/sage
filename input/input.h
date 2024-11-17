@@ -2,10 +2,6 @@
 #include <stdio.h>
 #include "utils.h"
 
-typedef struct Layout {
-    LayoutWritables* writables;
-} Layout;
-
 typedef struct LayoutWritables {
     char* tilde;
     char* k1;
@@ -58,5 +54,17 @@ typedef struct LayoutWritables {
     char* space;
     char* apostrophe;
 } LayoutWritables;
+
+typedef struct Layout {
+    LayoutWritables* writables;
+    Hashmap* normal;
+    Hashmap* insert;
+    Hashmap* visual;
+    Hashmap* command;
+} Layout;
+
+typedef struct LangLayouts {
+    Layout* en;
+} LangLayouts;
 
 void UpdateInput();
