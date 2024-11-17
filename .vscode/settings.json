@@ -7,6 +7,7 @@
         "time.h": "c",
         "stdio.h": "c",
         "stdlib.h": "c",
-        "timeb.h": "c"
+        "timeb.h": "c",
+        "ini.h": "c"
     }
 }

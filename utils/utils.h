@@ -10,6 +10,9 @@
 // We store time in int, not uint, to allow for negative deltas.
 #define Time int64_t
 
+// Negative codes - errors, 0 code - OK, positive codes - ok messages.
+#define Code int16_t
+
 typedef void (*Function)();
 
 Time TimeNow();
