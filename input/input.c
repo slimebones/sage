@@ -9,6 +9,4 @@ void UpdateInput() {
     if (key == 0) {
         return;
     }
-    lastInputTime = TimeNow();
-    printf("%llu\n", lastInputTime);
 }

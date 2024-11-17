@@ -7,6 +7,7 @@
 #define PLATFORM_WIN32 1
 
 #define nil NULL
+// We store time in int, not uint, to allow for negative deltas.
 #define Time int64_t
 
 typedef void (*Function)();
