@@ -9,4 +9,5 @@ void UpdateInput() {
     if (key == 0) {
         return;
     }
+    printf("%d\n", key);
 }
