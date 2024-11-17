@@ -1,3 +1,5 @@
+#include <stdio.h>
+#include <string.h>
 #include "raylib.h"
 #include "utils.h"
 #include "buffer.h"
@@ -6,6 +8,10 @@ Font font;
 Buffer* selectedBuffer = nil;
 
 void update() {
+    for (int i = 0; i < MAX_BUFFERS; i++) {
+        Buffer* buffer = Buffers[i];
+        printf("%d\n", buffer->Mode);
+    }
 }
 
 void draw() {
@@ -29,6 +35,12 @@ int main() {
     SetTargetFPS(60);
     // Stop execution while no input/window events happen.
     EnableEventWaiting();
+
+    for (int i = 0; i < MAX_BUFFERS; i++) {
+        Buffer* buffer = &(Buffer){Insert};
+        Buffers[i] = buffer;
+        printf("%d\n", buffer->Mode);
+    }
 
     font = LoadFont("static/inconsolata/variable.ttf");
     while (!WindowShouldClose()) {

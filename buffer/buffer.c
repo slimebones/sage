@@ -1,5 +1,7 @@
 #include "buffer.h"
 
+Buffer* Buffers[MAX_BUFFERS];
+
 void SelectBuffer(Buffer *buffer) {
 }
 

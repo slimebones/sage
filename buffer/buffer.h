@@ -1,4 +1,5 @@
 #include "utils.h"
+#define MAX_BUFFERS 64
 
 typedef struct BufferProcessor {
     char Key[32];
@@ -16,12 +17,11 @@ typedef enum BufferMode {
 } BufferMode;
 
 typedef struct Buffer {
-    BufferProcessor Processor;
+    // BufferProcessor* Processor;
     BufferMode Mode;
 } Buffer;
 
-// There are up to 64 buffers.
-extern Buffer Buffers[64];
+extern Buffer* Buffers[MAX_BUFFERS];
 
 void SelectBuffer(Buffer* buffer);
 void UpdateBuffer(Buffer* buffer);
