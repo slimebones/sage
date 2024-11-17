@@ -33,12 +33,13 @@ void draw() {
     // );
 }
 
-typedef struct {
+typedef struct IniConfig {
     const char* space;
     const char* q;
 } IniConfig;
 
-static int iniHandler(void* ini, const char* section, const char* name, const char* value) {
+static int iniHandler(void* user, const char* section, const char* name, const char* value) {
+    IniConfig* config = (IniConfig*)user;
     printf("%s %s %s\n", section, name, value);
     return 0;
 }
@@ -50,7 +51,6 @@ Code parseAppIni() {
         printf("[E] Can't load `%s`. (Code %d)\n", APPINI_PATH, -1);
         return Error;
     }
-    printf("Ini Config: %s %s\n", iniConfig.space, iniConfig.q);
     return Ok;
 }
 
