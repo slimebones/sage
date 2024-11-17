@@ -3,14 +3,16 @@
 #include "raylib.h"
 #include "utils.h"
 #include "buffer.h"
+#include "input.h"
 
 Font font;
 Buffer* selectedBuffer = nil;
 
 void update() {
+    UpdateInput();
     for (int i = 0; i < MAX_BUFFERS; i++) {
         Buffer* buffer = Buffers[i];
-        printf("%d\n", buffer->Mode);
+        UpdateBuffer(buffer);
     }
 }
 
@@ -29,17 +31,21 @@ void draw() {
     // );
 }
 
-int main() {
+void main() {
+#ifdef _WIN32
+    println(1111);
+#endif
+
     SetConfigFlags(FLAG_WINDOW_RESIZABLE);
     InitWindow(800, 600, "Sage");
     SetTargetFPS(60);
     // Stop execution while no input/window events happen.
     EnableEventWaiting();
 
+    // Initialize all buffers in normal mode.
     for (int i = 0; i < MAX_BUFFERS; i++) {
-        Buffer* buffer = &(Buffer){Insert};
+        Buffer* buffer = &(Buffer){Normal};
         Buffers[i] = buffer;
-        printf("%d\n", buffer->Mode);
     }
 
     font = LoadFont("static/inconsolata/variable.ttf");

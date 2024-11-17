@@ -2,6 +2,11 @@
     "files.associations": {
         "buffer.h": "c",
         "raylib.h": "c",
-        "utils.h": "c"
+        "utils.h": "c",
+        "input.h": "c",
+        "time.h": "c",
+        "stdio.h": "c",
+        "stdlib.h": "c",
+        "timeb.h": "c"
     }
 }
