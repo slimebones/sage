@@ -16,3 +16,6 @@
 typedef void (*Function)();
 
 Time TimeNow();
+
+char* GetCwd();
+char* GetHomeDir();

@@ -42,3 +42,21 @@ Time TimeNow() {
     return ret;
     #endif
 }
+
+// Buffer size is always 512.
+char* GetCwd() {
+    char* buffer = malloc(512);
+#ifdef PLATFORM_WIN32
+    GetCurrentDirectory(
+        512,
+        buffer
+    );
+#endif
+    return buffer;
+}
+
+char* GetHomeDir() {
+#ifdef PLATFORM_WIN32
+    return getenv("USERPROFILE");
+#endif
+}

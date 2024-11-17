@@ -2,7 +2,7 @@
 #include <string.h>
 #include "raylib.h"
 #include "utils.h"
-#include "codes.h"
+#include "common.h"
 #include "buffer.h"
 #include "input.h"
 #include "ini.h"
@@ -45,16 +45,31 @@ static int iniHandler(void* ini, const char* section, const char* name, const ch
 
 Code parseAppIni() {
     IniConfig iniConfig;
-    int r = ini_parse("app.ini", iniHandler, &iniConfig);
-    if (r != 0) {
-        printf("[E] Can't load `app.ini`. (Code %d)\n", -1);
+    int r = ini_parse(APPINI_PATH, iniHandler, &iniConfig);
+    if (r < 0) {
+        printf("[E] Can't load `%s`. (Code %d)\n", APPINI_PATH, -1);
         return Error;
     }
     printf("Ini Config: %s %s\n", iniConfig.space, iniConfig.q);
     return Ok;
 }
 
+void initPaths() {
+    REPO_DIR = malloc(512);
+    strcpy(REPO_DIR, GetHomeDir());
+    strcat(REPO_DIR, "/.sage");
+
+    VAR_DIR = malloc(512);
+    strcpy(VAR_DIR, REPO_DIR);
+    strcat(VAR_DIR, "/var");
+
+    APPINI_PATH = malloc(512);
+    strcpy(APPINI_PATH, REPO_DIR);
+    strcat(APPINI_PATH, "/app.ini");
+}
+
 Code main() {
+    initPaths();
     int r = parseAppIni();
     if (r < 0) {
         return r;
