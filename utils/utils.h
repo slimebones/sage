@@ -1,7 +1,6 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdio.h>
-#include "hashmap.h"
 
 // We manually define platform here. Don't know why, but on my windows mingw
 // setup _WIN32 does not work.
@@ -22,7 +21,6 @@
 #define i64 int64_t
 
 typedef void (*Function)();
-typedef struct hashmap Hashmap;
 
 Time TimeNow();
 

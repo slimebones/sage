@@ -55,12 +55,18 @@ typedef struct LayoutWritables {
     char* apostrophe;
 } LayoutWritables;
 
+typedef struct Binding {
+    char* command;
+    char* bind;
+} Binding;
+#define BINDINGS_SIZE 128
+
 typedef struct Layout {
     LayoutWritables* writables;
-    Hashmap* normal;
-    Hashmap* insert;
-    Hashmap* visual;
-    Hashmap* command;
+    int** normal;
+    int** insert;
+    int** visual;
+    int** command;
 } Layout;
 
 typedef struct LangLayouts {

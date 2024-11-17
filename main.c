@@ -37,20 +37,26 @@ typedef struct IniConfig {
     LangLayouts* langLayouts;
 } IniConfig;
 
-static int iniHandler(void* user, const char* section, const char* name, const char* value) {
+static int iniHandler(
+    void* user, const char* section, const char* name, const char* value
+) {
     IniConfig* config = (IniConfig*)user;
-    if (strcmp(section, ""))
-    config->langLayouts->en->writables;
+    if (strcmp(section, "layout.en.normal")) {
+        hashmap_set(config->langLayouts->en->normal, &name);
+    }
+    if (strcmp(section, "layout.en.visual")) {
+        hashmap_set(config->langLayouts->en->visual, &name);
+    }
+    if (strcmp(section, "layout.en.insert")) {
+        hashmap_set(config->langLayouts->en->insert, &name);
+    }
+    if (strcmp(section, "layout.en.command")) {
+        hashmap_set(config->langLayouts->en->command, &name);
+    }
+    if (strcmp(section, "layout.en.writables")) {
+        hashmap_set(config->langLayouts->en->command, &name);
+    }
     return 0;
-}
-
-u64 charHash(const void* item, u64 seed0, u64 seed1) {
-    const char* target = item;
-    return hashmap_sip(target, strlen(target), seed0, seed1);
-}
-
-int charCompare(const void* a, const void* b, void* udata) {
-    return strcmp(a, b);
 }
 
 Code parseAppIni() {
@@ -60,17 +66,17 @@ Code parseAppIni() {
     config->langLayouts = malloc(sizeof(struct LangLayouts));
     config->langLayouts->en = malloc(sizeof(struct LangLayouts));
     config->langLayouts->en->writables = malloc(sizeof(struct LayoutWritables));
-    config->langLayouts->en->normal = hashmap_new(
-        sizeof(char*), 0, 0, 0, charHash, charCompare, nil, nil
+    config->langLayouts->en->normal = malloc(
+        BINDINGS_SIZE * sizeof(Binding*)
     );
-    config->langLayouts->en->insert = hashmap_new(
-        sizeof(char*), 0, 0, 0, charHash, charCompare, nil, nil
+    config->langLayouts->en->insert = malloc(
+        BINDINGS_SIZE * sizeof(Binding*)
     );
-    config->langLayouts->en->visual = hashmap_new(
-        sizeof(char*), 0, 0, 0, charHash, charCompare, nil, nil
+    config->langLayouts->en->visual = malloc(
+        BINDINGS_SIZE * sizeof(Binding*)
     );
-    config->langLayouts->en->command = hashmap_new(
-        sizeof(char*), 0, 0, 0, charHash, charCompare, nil, nil
+    config->langLayouts->en->command = malloc(
+        BINDINGS_SIZE * sizeof(Binding*)
     );
 
     int r = ini_parse(APPINI_PATH, iniHandler, config);
