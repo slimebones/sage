@@ -1,6 +1,6 @@
 #include "utils.h"
 
-// Isolate system call here, do not include in utils.h.
+// Isolate system calls here, do not include in utils.h.
 #ifdef PLATFORM_WIN32
 #include <windows.h>
 #else

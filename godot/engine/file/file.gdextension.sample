@@ -1,7 +1,0 @@
-[configuration]
-entry_symbol = "file"
-compatibility_minimum = 4.1
-
-[libraries]
-windows.debug.x86_64 = "res://engine/file/bin/libfile.dll"
-windows.release.x86_64 = "res://engine/file/bin/libfile.dll"
