@@ -11,10 +11,11 @@ func main() {
 		Appname: "sage",
 	})
 
+	rl.SetConfigFlags(rl.FlagWindowResizable | rl.FlagBorderlessWindowedMode)
 	rl.InitWindow(800, 600, "Sage")
 	defer rl.CloseWindow()
 
-	rl.SetTargetFPS(60)
+	rl.SetTargetFPS(15)
 	for !rl.WindowShouldClose() {
 		rl.BeginDrawing()
 		rl.ClearBackground(rl.Black)
