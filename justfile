@@ -1,13 +1,12 @@
 set shell := ["nu", "-c"]
 
 run: compile
-    @ ./zig-out/bin/sage
+    @ ./bin/sage
 
 compile:
-    @ zig build
+    @ rm -rf bin
+    @ mkdir bin
+    @ CGO_ENABLED=0 go build -o bin/sage ./src/main.go
 
-test:
-    @ zig build test
-
-serve_docs:
-    @ mkdocs serve
+test t="":
+    @ if "{{t}}" == "" { go test ./... } else { go test ./{{t}} }
