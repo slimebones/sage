@@ -9,5 +9,8 @@ func Log(message string, args ...any) {
 }
 
 func LogError(message string, args ...any) {
-	fmt.Printf("ERROR: "+message+"\n", args...)
+	const RED = "\033[91m"
+	const RESET = "\033[0m"
+	message = fmt.Sprintf(message, args...)
+	fmt.Printf("%sERROR%s: %s\n", RED, RESET, message)
 }
