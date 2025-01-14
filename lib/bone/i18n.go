@@ -2,7 +2,6 @@ package bone
 
 import (
 	"encoding/csv"
-	"fmt"
 	"os"
 	"strings"
 )
@@ -22,12 +21,12 @@ var translationLocale string = "en"
 // which will always be converted to string.
 //
 // For list of locales refer to https://docs.godotengine.org/en/4.3/tutorials/i18n/locales.html
-func TrLoadCsv(path string, locale string, delimiter rune) error {
+func TrLoadCsv(path string, locale string, delimiter rune) bool {
 	locale = strings.ToLower(locale)
 
 	file, e := os.Open(path)
 	if e != nil {
-		return Error(1)
+		return false
 	}
 	defer file.Close()
 
@@ -35,7 +34,7 @@ func TrLoadCsv(path string, locale string, delimiter rune) error {
 	reader.Comma = delimiter
 	records, e := reader.ReadAll()
 	if e != nil {
-		return Error(1)
+		return false
 	}
 
 	localeMap, ok := translationMap[locale]
@@ -46,7 +45,7 @@ func TrLoadCsv(path string, locale string, delimiter rune) error {
 
 	for i, record := range records {
 		if len(record) != 2 {
-			return Error(1)
+			return false
 		}
 		if i == 0 {
 			continue
@@ -54,35 +53,26 @@ func TrLoadCsv(path string, locale string, delimiter rune) error {
 		localeMap[strings.TrimSpace(record[0])] = strings.TrimSpace(record[1])
 	}
 
-	return nil
-}
-
-func TrCode(code int) string {
-	return Tr(fmt.Sprintf("CODE_%d", code))
-}
-
-// Codes are translated using keys `CODE_%`, where `%` is the number.
-func TrCodeOrError(code int) (string, error) {
-	return TrOrError(fmt.Sprintf("CODE_%d", code))
+	return true
 }
 
 func Tr(key string) string {
-	t, e := TrOrError(key)
-	if e != nil {
+	t, ok := TrOrError(key)
+	if !ok {
 		return key
 	}
 	return t
 }
 
-func TrOrError(key string) (string, error) {
+func TrOrError(key string) (string, bool) {
 	key = strings.ToUpper(key)
 	localeMap, ok := translationMap[translationLocale]
 	if !ok {
-		return "", Error(1)
+		return "", false
 	}
 	text, ok := localeMap[strings.ToUpper(key)]
 	if !ok {
-		return "", Error(1)
+		return "", false
 	}
-	return text, nil
+	return text, true
 }

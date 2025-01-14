@@ -55,7 +55,9 @@ func appInit(appname_ string) {
 
 	c, e := ini.Load(Vardir("app.cfg"))
 	// @todo create on missing
-	ErrorUnwrap(e)
+	if e != nil {
+		panic(e.Error())
+	}
 	Config = &AppConfig{
 		data: c,
 	}
