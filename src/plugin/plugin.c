@@ -1,7 +1,7 @@
 #include "bone.h"
 #include "windows.h"
 
-typedef char* (__stdcall *KeyFunc)();
+typedef char* (*KeyFunc)();
 
 bool load() {
 	HMODULE dll = LoadLibrary("plugins/editor/editor.dll");

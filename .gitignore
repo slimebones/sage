@@ -1,4 +1,5 @@
 .env
-var
-bin
+var/
+bin/
 *.stackdump
+.vs/

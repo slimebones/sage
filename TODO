@@ -1,5 +1,5 @@
 + design
 + init C structure
-. integrate into visual studio
 . connect plugin for test
 . app.c - INI config loading
+. find way to debug on windows

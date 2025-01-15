@@ -4,8 +4,9 @@
 
 __declspec(dllexport) char* key() {
 	char* key = (char*)malloc(256 * sizeof(char));
-	strcpy(key, "editor");
-	return key;
+	// strcpy(key, "editor");
+	// return key;
+	return "wow";
 }
 
 int main() {}
