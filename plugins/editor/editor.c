@@ -3,7 +3,7 @@
 #include <string.h>
 
 __declspec(dllexport) char* key() {
-	char *key = malloc(256);
+	char* key = (char*)malloc(256 * sizeof(char));
 	strcpy(key, "editor");
 	return key;
 }

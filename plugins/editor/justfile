@@ -1,2 +1,5 @@
+set shell := ["nu", "-c"]
+CC := "gcc"
+
 compile:
-	@ gcc -I. -lwinmm -o editor.dll editor.c
+	@ {{CC}} -I. -lwinmm -o editor.dll editor.c
