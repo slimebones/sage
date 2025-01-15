@@ -1,0 +1,2 @@
+compile:
+	@ gcc -I. -lwinmm -o editor.dll editor.c

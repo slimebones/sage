@@ -8,16 +8,16 @@ int main(void)
     InitWindow(width, height, "Sage");
     Image icon = LoadImage("res/icon.png");
     SetWindowIcon(icon);
-    UnloadImage(icon);
 
-    SetTargetFPS(60);
+    SetTargetFPS(15);
 
     while (!WindowShouldClose()) {
         BeginDrawing();
-        ClearBackground(RAYWHITE);
-        DrawText("Hello, world!", 200, 200, 20, LIGHTGRAY);
+        ClearBackground(BLACK);
+        DrawText("Hello, world!", 200, 200, 20, WHITE);
         EndDrawing();
     }
     CloseWindow();
+    UnloadImage(icon);
     return 0;
 }
