@@ -1,27 +1,9 @@
 #include "bone.h"
 // #include "raylib.h"
 #include "plugin.h"
-#include "windows.h"
 
-typedef char* (*KeyFunc)();
 int main(void) {
-	HMODULE dll = LoadLibrary("plugins/editor/editor.dll");
-	if (dll == NULL) {
-		printf("Could not load the DLL\n");
-		return 1;
-	}
-
-	KeyFunc key = (KeyFunc)GetProcAddress(dll, "key");
-	if (key == NULL) {
-		printf("Could not locate the function\n");
-		FreeLibrary(dll);
-		return 1;
-	}
-
-	char* k = key();
-	logm("Received '%s'", k);
-
-	FreeLibrary(dll);
+	load();
 	return 0;
 
 	// const int width = 800;

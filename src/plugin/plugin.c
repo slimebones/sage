@@ -1,7 +1,15 @@
 #include "bone.h"
 #include "windows.h"
 
-typedef char* (*KeyFunc)();
+typedef void*(*Allocator)(size_t size);
+typedef char* (*KeyFunc)(Allocator allocator);
+
+// We use approach of passing allocator functions to DLL, otherwise we get
+// access violation errors while trying to use their own malloc. Don't
+// know why this happens, but allocator-passing approach seems to work.
+void* memory_allocator(size_t size) {
+	return malloc(size);
+}
 
 bool load() {
 	HMODULE dll = LoadLibrary("plugins/editor/editor.dll");
@@ -17,7 +25,7 @@ bool load() {
 		return false;
 	}
 
-	char* k = key();
+	char* k = key(memory_allocator);
 	logm("Received '%s'", k);
 
 	FreeLibrary(dll);

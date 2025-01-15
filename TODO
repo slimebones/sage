@@ -1,5 +1,6 @@
 + design
 + init C structure
-. connect plugin for test
++ connect plugin for test
++ find way to debug on windows => cygwin gdb, but haven't tested yet
+
 . app.c - INI config loading
-. find way to debug on windows

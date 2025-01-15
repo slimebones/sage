@@ -2,11 +2,12 @@
 #include <stdlib.h>
 #include <string.h>
 
-__declspec(dllexport) char* key() {
-	char* key = (char*)malloc(256 * sizeof(char));
-	// strcpy(key, "editor");
-	// return key;
-	return "wow";
+typedef void*(*Allocator)(size_t size);
+
+__declspec(dllexport) char* key(Allocator allocator) {
+	char* key = (char*)allocator(256 * sizeof(char));
+	strcpy(key, "editor");
+	return key;
 }
 
 int main() {}
