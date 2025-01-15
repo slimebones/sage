@@ -1,6 +1,0 @@
-{
-	"files.associations": {
-		"process.h": "c",
-		"vcruntime.h": "c"
-	}
-}
