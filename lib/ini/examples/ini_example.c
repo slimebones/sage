@@ -12,17 +12,17 @@ typedef struct
     const char* email;
 } configuration;
 
-static int handler(void* user, const char* section, const char* name,
+static int _handler(void* user, const char* section, const char* name,
                    const char* value)
 {
     configuration* pconfig = (configuration*)user;
 
     #define MATCH(s, n) strcmp(section, s) == 0 && strcmp(name, n) == 0
-    if (MATCH("protocol", "version")) {
+    if (match("protocol", "version")) {
         pconfig->version = atoi(value);
-    } else if (MATCH("user", "name")) {
+    } else if (match("user", "name")) {
         pconfig->name = strdup(value);
-    } else if (MATCH("user", "email")) {
+    } else if (match("user", "email")) {
         pconfig->email = strdup(value);
     } else {
         return 0;  /* unknown section/name, error */
@@ -37,7 +37,7 @@ int main(int argc, char* argv[])
     config.name = NULL;
     config.email = NULL;
 
-    if (ini_parse("test.ini", handler, &config) < 0) {
+    if (ini_parse("test.ini", _handler, &config) < 0) {
         printf("Can't load 'test.ini'\n");
         return 1;
     }

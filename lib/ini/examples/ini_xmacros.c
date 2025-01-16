@@ -17,7 +17,7 @@ config Config = {
 };
 
 /* process a line of the INI file, storing valid values into config struct */
-int handler(void *user, const char *section, const char *name,
+int _handler(void *user, const char *section, const char *name,
             const char *value)
 {
     config *cfg = (config *)user;
@@ -39,7 +39,7 @@ void dump_config(config *cfg)
 
 int main(int argc, char* argv[])
 {
-    if (ini_parse("test.ini", handler, &Config) < 0)
+    if (ini_parse("test.ini", _handler, &Config) < 0)
         printf("Can't load 'test.ini', using defaults\n");
     dump_config(&Config);
     return 0;

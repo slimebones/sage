@@ -1,10 +1,11 @@
 set shell := ["nu", "-c"]
 
+# We use MinGW gcc.
 CC := "gcc"
 
-SOURCE := "src/**/*.c lib/ini/ini.c lib/bone/bone.c"
+SOURCE := "src/**/*.c lib/ini/ini.c lib/bone/bone.c lib/bone/app.c"
 INCLUDES := "-Isrc/include -Ilib/ini -Ilib/raylib/include -Ilib/bone/include"
-LIB := "-lgdi32 -lwinmm -Llib -l:raylib/lib/raylib.dll"
+LIB := "-lgdi32 -lwinmm -Llib -l:raylib/lib/raylib.dll -ldbghelp"
 
 run *a: compile
 	@ ./bin/main
