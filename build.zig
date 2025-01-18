@@ -1,4 +1,5 @@
 const std = @import("std");
+const ini = @import("lib/ini/build.zig");
 
 pub fn build(b: *std.Build) void {
 	// Standard target options allows the person running `zig build` to choose
@@ -29,10 +30,14 @@ pub fn build(b: *std.Build) void {
 	b.installArtifact(raylib);
 	exe.linkLibrary(raylib);
 
-	const ini_dep = b.dependency("ini", .{ .target = target, .optimize = optimize, .shared = true });
-	const ini = ini_dep.artifact("ini");
-	b.installArtifact(ini);
-	exe.linkLibrary(ini);
+	const ini_lib = b.addStaticLibrary(.{
+		.name = "ini",
+		.root_source_file = b.path("lib/ini/build.zig"),
+		.target = target,
+		.optimize = optimize,
+	});
+	b.installArtifact(ini_lib);
+	exe.linkLibrary(ini_lib);
 
 	// This *creates* a Run step in the build graph, to be executed when another
 	// step is evaluated that depends on it. The next line below will establish

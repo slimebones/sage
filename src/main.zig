@@ -1,8 +1,8 @@
 const rl = @cImport(@cInclude("raylib.h"));
 const bone = @import("bone/bone.zig");
 
-pub fn main() void {
-	bone.log_error("Hello {s}!", .{"Mark"});
+pub fn main() !void {
+	try bone.init();
 
 	rl.SetTraceLogLevel(rl.LOG_WARNING);
 	rl.SetConfigFlags(rl.FLAG_WINDOW_RESIZABLE);
