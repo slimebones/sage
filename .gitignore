@@ -1,6 +1,11 @@
 .env
 var/
-bin/
-*.stackdump
-build/
+.zig-cache/
+zig-out/
+*.o
+*.exe
+*.dbg
+.idea/
+*.tmp
+*.bak
 .vs/
