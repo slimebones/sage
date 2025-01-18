@@ -1,9 +1,5 @@
 const std = @import("std");
-// const raysdk = @import("lib/raylib/build.zig");
 
-// Although this function looks imperative, note that its job is to
-// declaratively construct a build graph that will be executed by an external
-// runner.
 pub fn build(b: *std.Build) void {
 	// Standard target options allows the person running `zig build` to choose
 	// what target to build for. Here we do not override the defaults, which
@@ -32,6 +28,11 @@ pub fn build(b: *std.Build) void {
 	const raylib = raylib_dep.artifact("raylib");
 	b.installArtifact(raylib);
 	exe.linkLibrary(raylib);
+
+	const ini_dep = b.dependency("ini", .{ .target = target, .optimize = optimize, .shared = true });
+	const ini = ini_dep.artifact("ini");
+	b.installArtifact(ini);
+	exe.linkLibrary(ini);
 
 	// This *creates* a Run step in the build graph, to be executed when another
 	// step is evaluated that depends on it. The next line below will establish
