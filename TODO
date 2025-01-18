@@ -5,6 +5,8 @@
 
 + add cmake
 
-. try zig
++ init zig
+
+. zigbone
 . INI config loading
 . impl buffers, modes and commands
