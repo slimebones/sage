@@ -1,10 +1,10 @@
-// #include "bone.h"
-// #include "plugin.h"
+#include "bone.h"
+#include "plugin.h"
 #include "raylib.h"
 
 int main(void) {
 	// load();
-	// bone_init();
+	bone_init();
 
 	const int width = 800;
 	const int height = 450;

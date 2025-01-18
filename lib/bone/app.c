@@ -20,8 +20,9 @@ static int _handler(
 ) {
 	for (int i = 0; i < MAX_ITEMS; i++) {
 		if (sections[i] == null) {
+			// @incompleted decide about strcpy_s
 			char* copied = malloc(strlen(section) + 1);
-			strcpy(copied, section);
+			strcpy_s(copied, sizeof(copied), section);
 			sections[i] = copied;
 		}
 	}
@@ -46,8 +47,7 @@ static int _handler(
 }
 
 void _app_init() {
-	void *ptr;
-	if (ini_parse("var/app.cfg", _handler, ptr) < 0) {
+	if (ini_parse("var/app.cfg", _handler, null) < 0) {
 		printf("Can't load 'test.ini'.\n");
 	}
 }

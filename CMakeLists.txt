@@ -6,10 +6,20 @@ set(RAYLIB_DLL "${RAYLIB_DIR}/lib/raylib.dll")
 
 find_library(RAYLIB_LIBRARY NAMES raylibdll PATHS "${RAYLIB_DIR}/lib")
 
+include_directories("src/include")
 include_directories("${RAYLIB_DIR}/include")
+include_directories("lib/bone/include")
+include_directories("lib/ini")
 
-add_executable(main src/main.c)
+file(GLOB_RECURSE SOURCE
+    "${CMAKE_SOURCE_DIR}/src/*.c"
+    "${CMAKE_SOURCE_DIR}/src/**/*.c"
+    "lib/bone/*.c"
+    "lib/bone/**/*.c"
+    "lib/ini/ini.c"
+)
 
+add_executable(main ${SOURCE} ${BONE_SOURCE})
 target_link_libraries(main ${RAYLIB_LIBRARY})
 
 add_custom_command(TARGET main POST_BUILD

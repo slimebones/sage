@@ -2434,7 +2434,7 @@ void rlLoadExtensions(void *loader)
     // NOTE: We have to duplicate string because glGetString() returns a const string
     int size = strlen(extensions) + 1;      // Get extensions string size in bytes
     char *extensionsDup = (char *)RL_CALLOC(size, sizeof(char));
-    strcpy(extensionsDup, extensions);
+    strcpy_s(extensionsDup, extensions);
     extList[numExt] = extensionsDup;
 
     for (int i = 0; i < size; i++)
@@ -3417,9 +3417,9 @@ unsigned int rlLoadTextureCubemap(const void *data, int size, int format, int mi
             {
                 if (format < RL_PIXELFORMAT_COMPRESSED_DXT1_RGB)
                 {
-                    if ((format == RL_PIXELFORMAT_UNCOMPRESSED_R32) || 
+                    if ((format == RL_PIXELFORMAT_UNCOMPRESSED_R32) ||
                         (format == RL_PIXELFORMAT_UNCOMPRESSED_R32G32B32A32) ||
-                        (format == RL_PIXELFORMAT_UNCOMPRESSED_R16) || 
+                        (format == RL_PIXELFORMAT_UNCOMPRESSED_R16) ||
                         (format == RL_PIXELFORMAT_UNCOMPRESSED_R16G16B16A16)) TRACELOG(RL_LOG_WARNING, "TEXTURES: Cubemap requested format not supported");
                     else glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + face, mipmapLevel, glInternalFormat, mipSize, mipSize, 0, glFormat, glType, NULL);
                 }

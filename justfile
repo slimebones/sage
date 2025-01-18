@@ -1,19 +1,16 @@
 set shell := ["nu", "-c"]
 
-# We use MinGW gcc.
-CC := "gcc"
+run *a: build
+	@ ./build/Debug/main.exe
 
-SOURCE := "src/**/*.c lib/ini/ini.c lib/bone/bone.c lib/bone/app.c"
-INCLUDES := "-Isrc/include -Ilib/ini -Ilib/raylib/include -Ilib/bone/include"
-LIB := "-lgdi32 -lwinmm -Llib -l:raylib/lib/raylib.dll -ldbghelp"
+build:
+	@ mkdir build
+	@ cd build; cmake ..; cmake --build .
 
-run *a: compile
-	@ ./bin/main
+clean_run: clean_build
+	@ ./build/Debug/main.exe
 
-compile: compile_plugins
-	@ mkdir bin
-	@ {{CC}} {{INCLUDES}} {{LIB}} -o bin/main {{SOURCE}}
-	@ cp lib/raylib/lib/raylib.dll bin/
-
-compile_plugins:
-	@ cd plugins/editor; just compile
+clean_build:
+	@ rm -rf build
+	@ mkdir build
+	@ cd build; cmake ..; cmake --build .
