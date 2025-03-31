@@ -6,4 +6,6 @@ namespace bone {
 void log(const std::string& message);
 void log_error(const std::string& message);
 void init();
+
+// @todo implement log pipes, e.g. for sgcore interception
 }
