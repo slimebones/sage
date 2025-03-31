@@ -1,7 +1,7 @@
 set shell := ["nu", "-c"]
 
-run *a:
-	@ zig build run {{a}}
+run: build
+	@ ./build/Debug/sage.exe
 
-test *a:
-	@ zig build test {{a}}
+build:
+	@ mkdir build; cd build; cmake ..; cmake --build .

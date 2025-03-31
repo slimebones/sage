@@ -1,5 +1,0 @@
-set shell := ["nu", "-c"]
-CC := "gcc"
-
-compile:
-	@ {{CC}} -I. -lwinmm -o editor.dll editor.c
