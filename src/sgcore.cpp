@@ -1,7 +1,5 @@
 #include "sgcore.h"
 
-
-
 namespace sgcore {
 
 std::array<Buffer*, 256> BUFFERS;
@@ -22,7 +20,10 @@ Buffer_Mode Buffer::get_mode() {
 	return mode;
 }
 
+mINI::INIFile file("myfile.ini");
+
 int init() {
+	bone::log(bone::userdir("src/bone/bone.cpp").string());
 	return OK;
 }
 
