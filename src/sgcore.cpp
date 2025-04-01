@@ -20,10 +20,12 @@ Buffer_Mode Buffer::get_mode() {
 	return mode;
 }
 
-mINI::INIFile file("myfile.ini");
+mINI::INIStructure keybindings;
 
 int init() {
-	bone::log(bone::userdir("src/bone/bone.cpp").string());
+	mINI::INIFile ini_file(bone::userdir("keybindings.cfg"));
+	ini_file.read(keybindings);
+
 	return OK;
 }
 
