@@ -1,10 +1,32 @@
 #include "sgcore.h"
 
-int sgcore::init() {
+
+
+namespace sgcore {
+
+std::array<Buffer*, 256> BUFFERS;
+// Array of all initialized plugins. Their position is static, so they can be
+// referenced by index at any time during runtime.
+std::vector<Plugin*> PLUGINS;
+std::map<std::string, Command_Function> COMMANDS;
+
+int Buffer::set_mode(Buffer_Mode mode_) {
+	mode = mode_;
+	if (plugin_id >= 0) {
+		PLUGINS[plugin_id]->on_mode_changed(mode_);
+	}
 	return OK;
 }
 
-int sgcore::loop() {
+Buffer_Mode Buffer::get_mode() {
+	return mode;
+}
+
+int init() {
+	return OK;
+}
+
+int loop() {
 	SetTraceLogLevel(LOG_WARNING);
 	InitWindow(800, 450, "raylib [core] example - basic window");
 
@@ -21,4 +43,6 @@ int sgcore::loop() {
 	CloseWindow();
 
 	return OK;
+}
+
 }

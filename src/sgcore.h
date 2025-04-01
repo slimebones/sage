@@ -1,10 +1,10 @@
 #include "raylib/raylib.h"
 #include "common.h"
+#include <map>
+#include <functional>
 #include <vector>
 
 namespace sgcore {
-
-std::array<Buffer*, 256> BUFFERS;
 
 enum Buffer_Mode {
 	NORMAL,
@@ -21,20 +21,11 @@ public:
 	// for the buffer.
 	std::string* type = NULL;
 	std::vector<byte>* body = NULL;
-	// Active plugin of the buffer.
-	Plugin* plugin = NULL;
+	// Id of buffer's active plugin. Set to -1 if no active plugin.
+	int plugin_id = -1;
 
-	int set_mode(Buffer_Mode mode_) {
-		mode = mode_;
-		if (plugin != NULL) {
-			plugin->on_mode_changed(mode);
-		}
-		return OK;
-	}
-
-	Buffer_Mode get_mode() {
-		return mode;
-	}
+	int set_mode(Buffer_Mode mode_);
+	Buffer_Mode get_mode();
 
 private:
 	Buffer_Mode mode = Buffer_Mode::NORMAL;
@@ -85,7 +76,11 @@ public:
 int init();
 int loop();
 
-int call_command(const std::string& command) {
-}
+class Command_Context {
+public:
+};
 
+using Command_Function = std::function<int(Command_Context)>;
+
+int call_command(const std::string& command);
 }
