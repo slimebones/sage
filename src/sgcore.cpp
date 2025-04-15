@@ -3,6 +3,8 @@
 #include "raygui/src/raygui.h"
 #undef RAYGUI_IMPLEMENTATION
 
+#include "raygui/styles/dark/style_dark.h"
+
 namespace sgcore {
 
 std::array<Buffer*, 256> BUFFERS;
@@ -45,7 +47,7 @@ int loop() {
 	SetConfigFlags(FLAG_WINDOW_RESIZABLE);
 	// SetConfigFlags(FLAG_WINDOW_UNDECORATED);
 	InitWindow(800, 450, "Sage");
-	GuiLoadStyle("raygui/styles/dark/style_dark.rgs");
+	GuiLoadStyleDark();
 
 	Image icon = LoadImage("src/icon.png");
 	SetWindowIcon(icon);

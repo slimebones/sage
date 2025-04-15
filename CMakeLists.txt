@@ -11,6 +11,20 @@ file(GLOB_RECURSE DLL_LIBS "src/*dll.lib")
 
 add_executable(sage ${SOURCES} ${HEADERS})
 
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(sage PRIVATE
+        -Wno-all
+    )
+elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    target_compile_options(sage PRIVATE
+        -Wno-all
+    )
+elseif(MSVC)
+    target_compile_options(sage PRIVATE
+        /w
+    )
+endif()
+
 foreach(LIB ${DLL_LIBS})
     target_link_libraries(sage ${LIB})
 endforeach()
