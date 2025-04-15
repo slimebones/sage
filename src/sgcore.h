@@ -86,6 +86,8 @@ public:
 
 using Command_Function = std::function<int(Command_Context)>;
 
+char* get_mode_string();
+
 int call_command(const std::string& command);
 
 }
