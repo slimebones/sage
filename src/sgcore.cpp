@@ -32,6 +32,7 @@ Buffer_Mode Buffer::get_mode() {
 
 mINI::INIStructure raw_keybindings;
 std::map<std::string, std::vector<int>> KEYBINDINGS;
+#define KEY_DELAY = 100
 
 std::string KEYBINDINGS_TARGETS[] = {
 	"en_normal/go_insert_start",
@@ -117,7 +118,7 @@ std::string KEYBINDINGS_TARGETS[] = {
 	"en_writables/apostrophe",
 };
 
-std::map<const char*, int> BRACKET_KEYS = {
+std::map<std::string, int> BRACKET_KEYS = {
 	{"enter", KEY_ENTER},
 	{"tab", KEY_TAB},
 	{"lshift", KEY_LEFT_SHIFT},
@@ -140,18 +141,18 @@ int init() {
 		if (
 			raw_keybinding.size() > 2
 			&& (
-				(raw_keybinding[0] == '"' && raw_keybinding[1] == '"')
-				|| (raw_keybinding[0] == '`' && raw_keybinding[1] == '`')
+				(raw_keybinding[0] == '"' && raw_keybinding.back() == '"')
+				|| (raw_keybinding[0] == '`' && raw_keybinding.back() == '`')
 			)
 		) {
 			bool bracket_opened = false;
 			// Special bindings are bindings enclosed in `` quotes, allowing to use
 			// any symbols including `<>` without them being processed.
-			bool special_binding = raw_keybinding[0] == '`' && raw_keybinding[1] == '`';
+			bool special_binding = raw_keybinding[0] == '`' && raw_keybinding.back() == '`';
 
 			std::vector<char> bracket_chars;
 			for (char c : raw_keybinding.substr(1, raw_keybinding.length() - 2)) {
-				if (special_binding && c == '<') {
+				if (!special_binding && c == '<') {
 					if (bracket_opened) {
 						bone::log_error("Twice opening of command bracket in keybindings.cfg, skipping");
 						processed_keys.clear();
@@ -160,13 +161,13 @@ int init() {
 					bracket_opened = true;
 					continue;
 				}
-				if (special_binding && c == '>') {
+				if (!special_binding && c == '>') {
 					if (!bracket_opened) {
 						bone::log_error("Closing of bracket without opening, in keybindings.cfg, skipping");
 						processed_keys.clear();
 						break;
 					}
-					char* bracket_string = bracket_chars.data();
+					std::string bracket_string(bracket_chars.begin(), bracket_chars.end());
 					auto bracket_it = BRACKET_KEYS.find(bracket_string);
 					bracket_opened = false;
 					if (bracket_it != BRACKET_KEYS.end()) {
@@ -179,6 +180,7 @@ int init() {
 					bracket_chars.clear();
 					continue;
 				}
+
 				if (bracket_opened) {
 					bracket_chars.push_back(c);
 				} else {
@@ -213,6 +215,9 @@ void print_rectangle(Rectangle rect) {
 	printf("{%f, %f, %f, %f}\n", rect.x, rect.y, rect.width, rect.height);
 }
 
+std::vector<int> keybuffer;
+#define KEYBUFFER_CRITICAL_SIZE 64
+
 int loop() {
 	SetTraceLogLevel(LOG_WARNING);
 	SetConfigFlags(FLAG_WINDOW_RESIZABLE);
@@ -228,6 +233,38 @@ int loop() {
 
 	while (!WindowShouldClose())
 	{
+		// Gather pressed keys
+		while (true) {
+			auto k = GetKeyPressed();
+			if (k == 0) {
+				break;
+			}
+			keybuffer.push_back(k);
+		}
+
+		// Process keybuffer
+		switch (get_current_buffer()->get_mode()) {
+			case Buffer_Mode::NORMAL:
+				break;
+			case Buffer_Mode::INSERT:
+				if (keybuffer == KEYBINDINGS["en_insert/go_normal"]) {
+					bone::log("YEAH");
+					keybuffer.clear();
+				}
+				break;
+			case Buffer_Mode::VISUAL:
+				break;
+			case Buffer_Mode::COMMAND:
+				break;
+			default:
+				keybuffer.clear();
+				break;
+		}
+		if (keybuffer.size() >= KEYBUFFER_CRITICAL_SIZE) {
+			keybuffer.clear();
+			bone::log_error("Clear keybuffer due to reaching critical size");
+		}
+
 		BeginDrawing();
 		ClearBackground(GetColor(GuiGetStyle(DEFAULT, BACKGROUND_COLOR)));
 
