@@ -218,6 +218,14 @@ void print_rectangle(Rectangle rect) {
 std::vector<int> keybuffer;
 #define KEYBUFFER_CRITICAL_SIZE 64
 
+void print_vector_int(std::vector<int> v) {
+	printf("(");
+	for (auto a : v) {
+		printf("%d, ", a);
+	}
+	printf(")\n");
+}
+
 int loop() {
 	SetTraceLogLevel(LOG_WARNING);
 	SetConfigFlags(FLAG_WINDOW_RESIZABLE);
@@ -245,12 +253,15 @@ int loop() {
 		// Process keybuffer
 		switch (get_current_buffer()->get_mode()) {
 			case Buffer_Mode::NORMAL:
-				break;
-			case Buffer_Mode::INSERT:
+				print_vector_int(keybuffer);
+				print_vector_int(KEYBINDINGS["en_insert/go_normal"]);
+				printf("----")
 				if (keybuffer == KEYBINDINGS["en_insert/go_normal"]) {
 					bone::log("YEAH");
 					keybuffer.clear();
 				}
+				break;
+			case Buffer_Mode::INSERT:
 				break;
 			case Buffer_Mode::VISUAL:
 				break;
