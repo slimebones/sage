@@ -31,7 +31,13 @@ int init() {
 
 int loop() {
 	SetTraceLogLevel(LOG_WARNING);
-	InitWindow(800, 450, "raylib [core] example - basic window");
+	SetConfigFlags(FLAG_WINDOW_RESIZABLE);
+	// SetConfigFlags(FLAG_WINDOW_UNDECORATED);
+	InitWindow(800, 450, "Sage");
+
+	Image icon = LoadImage("src/icon.png");
+	SetWindowIcon(icon);
+	UnloadImage(icon);
 
 	while (!WindowShouldClose())
 	{
