@@ -137,35 +137,53 @@ int init() {
 		auto raw_keybinding = raw_keybindings[parts[0]][parts[1]];
 		std::vector<int> processed_keys;
 
-		bool bracket_opened = false;
-		std::vector<char> bracket_chars;
-		for (char c : raw_keybinding) {
-			if (c == '<') {
+		if (
+			raw_keybinding.size() > 2
+			&& (
+				(raw_keybinding[0] == '"' && raw_keybinding[1] == '"')
+				|| (raw_keybinding[0] == '`' && raw_keybinding[1] == '`')
+			)
+		) {
+			bool bracket_opened = false;
+			// Special bindings are bindings enclosed in `` quotes, allowing to use
+			// any symbols including `<>` without them being processed.
+			bool special_binding = raw_keybinding[0] == '`' && raw_keybinding[1] == '`';
+
+			std::vector<char> bracket_chars;
+			for (char c : raw_keybinding.substr(1, raw_keybinding.length() - 2)) {
+				if (special_binding && c == '<') {
+					if (bracket_opened) {
+						bone::log_error("Twice opening of command bracket in keybindings.cfg, skipping");
+						processed_keys.clear();
+						break;
+					}
+					bracket_opened = true;
+					continue;
+				}
+				if (special_binding && c == '>') {
+					if (!bracket_opened) {
+						bone::log_error("Closing of bracket without opening, in keybindings.cfg, skipping");
+						processed_keys.clear();
+						break;
+					}
+					char* bracket_string = bracket_chars.data();
+					auto bracket_it = BRACKET_KEYS.find(bracket_string);
+					bracket_opened = false;
+					if (bracket_it != BRACKET_KEYS.end()) {
+						processed_keys.push_back(bracket_it->second);
+					} else {
+						bone::log_error(bone::format("During keybindings processing, unrecognized bracket command: '%s'", bracket_string));
+						bracket_chars.clear();
+						break;
+					}
+					bracket_chars.clear();
+					continue;
+				}
 				if (bracket_opened) {
-					bone::log_error("Twice opening of command bracket in keybindings.cfg, skipping");
-					processed_keys.clear();
-					break;
-				}
-				bracket_opened = true;
-			}
-			if (c == '>') {
-				if (!bracket_opened) {
-					bone::log_error("Closing of bracket without opening, in keybindings.cfg, skipping");
-					processed_keys.clear();
-					break;
-				}
-				char* bracket_string = bracket_chars.data();
-				if (bracket_string == "enter") {
-					processed_keys.push_back(KEY_ENTER);
+					bracket_chars.push_back(c);
 				} else {
-					bone::log_error(bone::format("During keybindings processing, unrecognized bracket command: '%s'", bracket_string));
+					processed_keys.push_back((int)c);
 				}
-				bracket_opened = false;
-			}
-			if (bracket_opened) {
-				bracket_chars.push_back(c);
-			} else {
-				processed_keys.push_back((int)c)
 			}
 		}
 
