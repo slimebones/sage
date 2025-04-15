@@ -217,6 +217,7 @@ int loop() {
 	SetTraceLogLevel(LOG_WARNING);
 	SetConfigFlags(FLAG_WINDOW_RESIZABLE);
 	InitWindow(800, 450, "Sage");
+	SetExitKey(0);
 	GuiLoadStyleDark();
 
 	Font font = LoadFont("src/inconsolata/variable.ttf");
