@@ -54,4 +54,7 @@ int loop() {
 	return OK;
 }
 
+int call_command(const std::string& command) {
+	return OK;
+}
 }
