@@ -36,8 +36,8 @@ int init() {
 	mINI::INIFile ini_file(bone::userdir("keybindings.cfg"));
 	ini_file.read(keybindings);
 
-	Buffer home_buffer;
-	BUFFERS[0] = &home_buffer;
+	Buffer* home_buffer = new Buffer();
+	BUFFERS[0] = home_buffer;
 
 	return OK;
 }
@@ -51,8 +51,11 @@ float relative_width(float value) {
 }
 
 #define INFOBAR_SIZE 50
-#define INFOBAR_FONT_SIZE 18
-#define INFOBAR_MOD 11.25
+#define INFOBAR_FONT_SIZE 24
+
+void print_rectangle(Rectangle rect) {
+	printf("{%f, %f, %f, %f}\n", rect.x, rect.y, rect.width, rect.height);
+}
 
 int loop() {
 	SetTraceLogLevel(LOG_WARNING);
@@ -60,11 +63,11 @@ int loop() {
 	InitWindow(800, 450, "Sage");
 	GuiLoadStyleDark();
 
+	Font font = LoadFont("src/inconsolata/variable.ttf");
+
 	Image icon = LoadImage("src/icon.png");
 	SetWindowIcon(icon);
 	UnloadImage(icon);
-
-	bool show_message_box = false;
 
 	while (!WindowShouldClose())
 	{
@@ -72,11 +75,15 @@ int loop() {
 		ClearBackground(GetColor(GuiGetStyle(DEFAULT, BACKGROUND_COLOR)));
 
 		DrawLine(-100, relative_height(-INFOBAR_SIZE), relative_width(100), relative_height(-INFOBAR_SIZE), WHITE);
-		DrawText(get_mode_string(), 10, relative_height(-INFOBAR_SIZE/(INFOBAR_FONT_SIZE/INFOBAR_MOD)), INFOBAR_FONT_SIZE, WHITE);
+
+		float text_x = 10;
+		float text_y = relative_height(-INFOBAR_SIZE) + INFOBAR_FONT_SIZE / 1.75;
+		DrawTextEx(font, get_mode_string(), {text_x, text_y}, INFOBAR_FONT_SIZE, 0, WHITE);
 
 		EndDrawing();
 	}
 
+	UnloadFont(font);
 	CloseWindow();
 
 	return OK;
