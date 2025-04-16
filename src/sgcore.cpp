@@ -13,6 +13,110 @@ int current_buffer_index = 0;
 // referenced by index at any time during runtime.
 std::vector<Plugin*> PLUGINS;
 std::map<std::string, Command_Function> COMMANDS;
+std::unordered_map<int, std::string> KEYCODES = {
+	{KEY_ENTER, "enter"},
+	{KEY_TAB, "tab"},
+	{KEY_LEFT_SHIFT, "lshift"},
+	{KEY_SPACE, "space"},
+	{KEY_APOSTROPHE, "apostrophe"},
+	{KEY_COMMA, "comma"},
+	{KEY_MINUS, "minus"},
+	{KEY_PERIOD, "period"},
+	{KEY_SLASH, "slash"},
+	{KEY_0, "0"},
+	{KEY_1, "1"},
+	{KEY_2, "2"},
+	{KEY_3, "3"},
+	{KEY_4, "4"},
+	{KEY_5, "5"},
+	{KEY_6, "6"},
+	{KEY_7, "7"},
+	{KEY_8, "8"},
+	{KEY_9, "9"},
+	{KEY_SEMICOLON, "semicolon"},
+	{KEY_EQUAL, "equal"},
+	{KEY_A, "a"},
+	{KEY_B, "b"},
+	{KEY_C, "c"},
+	{KEY_D, "d"},
+	{KEY_E, "e"},
+	{KEY_F, "f"},
+	{KEY_G, "g"},
+	{KEY_H, "h"},
+	{KEY_I, "i"},
+	{KEY_J, "j"},
+	{KEY_K, "k"},
+	{KEY_L, "l"},
+	{KEY_M, "m"},
+	{KEY_N, "n"},
+	{KEY_O, "o"},
+	{KEY_P, "p"},
+	{KEY_Q, "q"},
+	{KEY_R, "r"},
+	{KEY_S, "s"},
+	{KEY_T, "t"},
+	{KEY_U, "u"},
+	{KEY_V, "v"},
+	{KEY_W, "w"},
+	{KEY_X, "x"},
+	{KEY_Y, "y"},
+	{KEY_Z, "z"},
+	{KEY_LEFT_BRACKET, "left bracket"},
+	{KEY_BACKSLASH, "backslash"},
+	{KEY_RIGHT_BRACKET, "right bracket"},
+	{KEY_GRAVE, "grave"},
+	{KEY_ESCAPE, "escape"},
+	{KEY_ENTER, "enter"},
+	{KEY_TAB, "tab"},
+	{KEY_BACKSPACE, "backspace"},
+	{KEY_INSERT, "insert"},
+	{KEY_DELETE, "delete"},
+	{KEY_RIGHT, "right"},
+	{KEY_LEFT, "left"},
+	{KEY_DOWN, "down"},
+	{KEY_UP, "up"},
+	{KEY_PAGE_UP, "page up"},
+	{KEY_PAGE_DOWN, "page down"},
+	{KEY_HOME, "home"},
+	{KEY_END, "end"},
+	{KEY_CAPS_LOCK, "caps lock"},
+	{KEY_SCROLL_LOCK, "scroll lock"},
+	{KEY_NUM_LOCK, "num lock"},
+	{KEY_PRINT_SCREEN, "print screen"},
+	{KEY_PAUSE, "pause"},
+	{KEY_F1, "f1"},
+	{KEY_F2, "f2"},
+	{KEY_F3, "f3"},
+	{KEY_F4, "f4"},
+	{KEY_F5, "f5"},
+	{KEY_F6, "f6"},
+	{KEY_F7, "f7"},
+	{KEY_F8, "f8"},
+	{KEY_F9, "f9"},
+	{KEY_F10, "f10"},
+	{KEY_F11, "f11"},
+	{KEY_F12, "f12"},
+	{KEY_F13, "f13"},
+	{KEY_F14, "f14"},
+	{KEY_F15, "f15"},
+	{KEY_F16, "f16"},
+	{KEY_F17, "f17"},
+	{KEY_F18, "f18"},
+	{KEY_F19, "f19"},
+	{KEY_KB_MENU, "menu"},
+	{KEY_KB_MUTE, "mute"},
+	{KEY_KB_VOLUME_DOWN, "volume_down"},
+	{KEY_KB_VOLUME_UP, "volume_up"},
+	{KEY_KB_PLAY, "play"},
+	{KEY_KB_STOP, "stop"},
+	{KEY_KB_NEXT, "next"},
+	{KEY_KB_PREVIOUS, "previous"},
+	{KEY_KB_HOME, "home"},
+	{KEY_KB_END, "end"},
+	{KEY_KB_PAGE_UP, "page_up"},
+	{KEY_KB_PAGE_DOWN, "page_down"},
+	{KEY_KB_INSERT, "insert"},
+};
 
 int Buffer::set_mode(Buffer_Mode mode_) {
 	mode = mode_;
@@ -118,11 +222,15 @@ std::string KEYBINDINGS_TARGETS[] = {
 	"en_writables/apostrophe",
 };
 
-std::map<std::string, int> BRACKET_KEYS = {
-	{"enter", KEY_ENTER},
-	{"tab", KEY_TAB},
-	{"lshift", KEY_LEFT_SHIFT},
-};
+template<typename K, typename V>
+K map_find_by_value(const std::unordered_map<K, V>& map, const V& value, const K& default_) {
+    for (const auto& pair : map) {
+        if (pair.second == value) {
+            return pair.first; // Return the key if the value matches
+        }
+    }
+	return default_;
+}
 
 int init() {
 	mINI::INIFile ini_file(bone::userdir("keybindings.cfg"));
@@ -168,10 +276,10 @@ int init() {
 						break;
 					}
 					std::string bracket_string(bracket_chars.begin(), bracket_chars.end());
-					auto bracket_it = BRACKET_KEYS.find(bracket_string);
+					auto keyvalue = map_find_by_value(KEYCODES, bracket_string, 0);
 					bracket_opened = false;
-					if (bracket_it != BRACKET_KEYS.end()) {
-						processed_keys.push_back(bracket_it->second);
+					if (keyvalue != 0) {
+						processed_keys.push_back(keyvalue);
 					} else {
 						bone::log_error(bone::format("During keybindings processing, unrecognized bracket command: '%s'", bracket_string));
 						bracket_chars.clear();
@@ -184,7 +292,11 @@ int init() {
 				if (bracket_opened) {
 					bracket_chars.push_back(c);
 				} else {
-					processed_keys.push_back((int)c);
+					std::string s(1, c);
+					auto keyvalue = map_find_by_value(KEYCODES, s, 0);
+					if (keyvalue != 0) {
+						processed_keys.push_back(keyvalue);
+					}
 				}
 			}
 		}
@@ -255,7 +367,7 @@ int loop() {
 			case Buffer_Mode::NORMAL:
 				print_vector_int(keybuffer);
 				print_vector_int(KEYBINDINGS["en_insert/go_normal"]);
-				printf("----")
+				printf("----\n");
 				if (keybuffer == KEYBINDINGS["en_insert/go_normal"]) {
 					bone::log("YEAH");
 					keybuffer.clear();
