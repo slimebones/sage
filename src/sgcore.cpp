@@ -212,6 +212,8 @@ K map_find_by_value(const std::unordered_map<K, V>& map, const V& value, const K
 	return default_;
 }
 
+int longest_keybinding_size = 0;
+
 int init() {
 	mINI::INIFile ini_file(bone::userdir("keybindings.cfg"));
 	ini_file.read(raw_keybindings);
@@ -289,6 +291,9 @@ int init() {
 		}
 
 		// This should copy the vector to the map
+		if (processed_keys.size() > longest_keybinding_size) {
+			longest_keybinding_size = processed_keys.size();
+		}
 		KEYBINDINGS[target] = processed_keys;
 	}
 
@@ -317,7 +322,6 @@ void print_rectangle(Rectangle rect) {
 std::vector<int> keybuffer;
 // Keybuffer without control keys.
 std::vector<int> pure_keybuffer;
-#define KEYBUFFER_CRITICAL_SIZE 64
 
 void clear_keybuffer() {
 	keybuffer.clear();
@@ -358,7 +362,7 @@ void _update(float delta) {
 				key = find_matching_key("en_normal");
 				if (key != "") {
 					bone::log(key);
-					keybuffer.clear();
+					clear_keybuffer();
 				}
 				break;
 			case Buffer_Mode::INSERT:
@@ -368,13 +372,12 @@ void _update(float delta) {
 			case Buffer_Mode::COMMAND:
 				break;
 			default:
-				keybuffer.clear();
+				clear_keybuffer();
 				break;
 		}
 	}
-	if (keybuffer.size() >= KEYBUFFER_CRITICAL_SIZE) {
-		keybuffer.clear();
-		bone::log_error("Clear keybuffer due to reaching critical size");
+	if (keybuffer.size() > longest_keybinding_size) {
+		clear_keybuffer();
 	}
 }
 
@@ -422,13 +425,13 @@ int loop() {
 		// order to the start of the keybuffer, if they are just pressed (not necessarily this frame).
 		std::vector<int> control_keybuffer;
 		// Order matters!
-		if (IsKeyPressed(KEY_LEFT_SHIFT)) {
+		if (IsKeyDown(KEY_LEFT_SHIFT)) {
 			control_keybuffer.push_back(KEY_LEFT_SHIFT);
 		}
-		if (IsKeyPressed(KEY_LEFT_CONTROL)) {
+		if (IsKeyDown(KEY_LEFT_CONTROL)) {
 			control_keybuffer.push_back(KEY_LEFT_CONTROL);
 		}
-		if (IsKeyPressed(KEY_LEFT_ALT)) {
+		if (IsKeyDown(KEY_LEFT_ALT)) {
 			control_keybuffer.push_back(KEY_LEFT_ALT);
 		}
 		// Collect pure keybuffer
