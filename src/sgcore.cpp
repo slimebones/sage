@@ -312,22 +312,19 @@ std::vector<int> keybuffer;
 
 void print_vector_int(std::vector<int> v) {
 	printf("(");
+	auto i = 0;
 	for (auto a : v) {
-		printf("%d, ", a);
+		if (i == v.size()-1) {
+			printf("%d", a);
+		} else {
+			printf("%d, ", a);
+		}
+		i++;
 	}
 	printf(")\n");
 }
 
 void _update(float delta) {
-	// Gather pressed keys
-	while (true) {
-		auto k = GetKeyPressed();
-		if (k == 0) {
-			break;
-		}
-		keybuffer.push_back(k);
-	}
-
 	// Process keybuffer
 	switch (get_current_buffer()->get_mode()) {
 		case Buffer_Mode::NORMAL:
@@ -368,7 +365,7 @@ void _draw(Font font) {
 	EndDrawing();
 }
 
-#define TARGET_FPS 15.0f
+#define TARGET_FPS 5.0f
 const float UPDATE_INTERVAL = 1.0f / TARGET_FPS;
 
 int loop() {
@@ -392,6 +389,16 @@ int loop() {
 		float delta_time = current_time - prev_time;
 		prev_time = current_time;
 		accumulator += delta_time;
+
+		// Gather pressed keys
+		while (true) {
+			auto k = GetKeyPressed();
+			if (k == 0) {
+				break;
+			}
+			keybuffer.push_back(k);
+		}
+
 		// Update logic runs at a fixed interval
 		while (accumulator >= UPDATE_INTERVAL) {
 			accumulator -= UPDATE_INTERVAL;
