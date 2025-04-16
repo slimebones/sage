@@ -23,16 +23,16 @@ std::unordered_map<int, std::string> KEYCODES = {
 	{KEY_MINUS, "minus"},
 	{KEY_PERIOD, "period"},
 	{KEY_SLASH, "slash"},
-	{KEY_0, "0"},
-	{KEY_1, "1"},
-	{KEY_2, "2"},
-	{KEY_3, "3"},
-	{KEY_4, "4"},
-	{KEY_5, "5"},
-	{KEY_6, "6"},
-	{KEY_7, "7"},
-	{KEY_8, "8"},
-	{KEY_9, "9"},
+	{KEY_KP_0, "0"},
+	{KEY_KP_1, "1"},
+	{KEY_KP_2, "2"},
+	{KEY_KP_3, "3"},
+	{KEY_KP_4, "4"},
+	{KEY_KP_5, "5"},
+	{KEY_KP_6, "6"},
+	{KEY_KP_7, "7"},
+	{KEY_KP_8, "8"},
+	{KEY_KP_9, "9"},
 	{KEY_SEMICOLON, "semicolon"},
 	{KEY_EQUAL, "equal"},
 	{KEY_A, "a"},
@@ -96,26 +96,6 @@ std::unordered_map<int, std::string> KEYCODES = {
 	{KEY_F10, "f10"},
 	{KEY_F11, "f11"},
 	{KEY_F12, "f12"},
-	{KEY_F13, "f13"},
-	{KEY_F14, "f14"},
-	{KEY_F15, "f15"},
-	{KEY_F16, "f16"},
-	{KEY_F17, "f17"},
-	{KEY_F18, "f18"},
-	{KEY_F19, "f19"},
-	{KEY_KB_MENU, "menu"},
-	{KEY_KB_MUTE, "mute"},
-	{KEY_KB_VOLUME_DOWN, "volume_down"},
-	{KEY_KB_VOLUME_UP, "volume_up"},
-	{KEY_KB_PLAY, "play"},
-	{KEY_KB_STOP, "stop"},
-	{KEY_KB_NEXT, "next"},
-	{KEY_KB_PREVIOUS, "previous"},
-	{KEY_KB_HOME, "home"},
-	{KEY_KB_END, "end"},
-	{KEY_KB_PAGE_UP, "page_up"},
-	{KEY_KB_PAGE_DOWN, "page_down"},
-	{KEY_KB_INSERT, "insert"},
 };
 
 int Buffer::set_mode(Buffer_Mode mode_) {
@@ -338,6 +318,59 @@ void print_vector_int(std::vector<int> v) {
 	printf(")\n");
 }
 
+void _update(float delta) {
+	// Gather pressed keys
+	while (true) {
+		auto k = GetKeyPressed();
+		if (k == 0) {
+			break;
+		}
+		keybuffer.push_back(k);
+	}
+
+	// Process keybuffer
+	switch (get_current_buffer()->get_mode()) {
+		case Buffer_Mode::NORMAL:
+			print_vector_int(keybuffer);
+			print_vector_int(KEYBINDINGS["en_insert/go_normal"]);
+			printf("----\n");
+			if (keybuffer == KEYBINDINGS["en_insert/go_normal"]) {
+				bone::log("YEAH");
+				keybuffer.clear();
+			}
+			break;
+		case Buffer_Mode::INSERT:
+			break;
+		case Buffer_Mode::VISUAL:
+			break;
+		case Buffer_Mode::COMMAND:
+			break;
+		default:
+			keybuffer.clear();
+			break;
+	}
+	if (keybuffer.size() >= KEYBUFFER_CRITICAL_SIZE) {
+		keybuffer.clear();
+		bone::log_error("Clear keybuffer due to reaching critical size");
+	}
+}
+
+void _draw(Font font) {
+	BeginDrawing();
+	ClearBackground(GetColor(GuiGetStyle(DEFAULT, BACKGROUND_COLOR)));
+
+	DrawLine(-100, relative_height(-INFOBAR_SIZE), relative_width(100), relative_height(-INFOBAR_SIZE), WHITE);
+
+	float text_x = 10;
+	float text_y = relative_height(-INFOBAR_SIZE) + INFOBAR_FONT_SIZE / 1.75;
+	DrawTextEx(font, get_mode_string(), {text_x, text_y}, INFOBAR_FONT_SIZE, 0, WHITE);
+
+	EndDrawing();
+}
+
+#define TARGET_FPS 15.0f
+const float UPDATE_INTERVAL = 1.0f / TARGET_FPS;
+
 int loop() {
 	SetTraceLogLevel(LOG_WARNING);
 	SetConfigFlags(FLAG_WINDOW_RESIZABLE);
@@ -351,53 +384,21 @@ int loop() {
 	SetWindowIcon(icon);
 	UnloadImage(icon);
 
-	while (!WindowShouldClose())
-	{
-		// Gather pressed keys
-		while (true) {
-			auto k = GetKeyPressed();
-			if (k == 0) {
-				break;
-			}
-			keybuffer.push_back(k);
+	float accumulator = 0.0f;
+	float prev_time = GetTime();
+
+	while (!WindowShouldClose()) {
+		float current_time = GetTime();
+		float delta_time = current_time - prev_time;
+		prev_time = current_time;
+		accumulator += delta_time;
+		// Update logic runs at a fixed interval
+		while (accumulator >= UPDATE_INTERVAL) {
+			accumulator -= UPDATE_INTERVAL;
+			_update(delta_time);
 		}
 
-		// Process keybuffer
-		switch (get_current_buffer()->get_mode()) {
-			case Buffer_Mode::NORMAL:
-				print_vector_int(keybuffer);
-				print_vector_int(KEYBINDINGS["en_insert/go_normal"]);
-				printf("----\n");
-				if (keybuffer == KEYBINDINGS["en_insert/go_normal"]) {
-					bone::log("YEAH");
-					keybuffer.clear();
-				}
-				break;
-			case Buffer_Mode::INSERT:
-				break;
-			case Buffer_Mode::VISUAL:
-				break;
-			case Buffer_Mode::COMMAND:
-				break;
-			default:
-				keybuffer.clear();
-				break;
-		}
-		if (keybuffer.size() >= KEYBUFFER_CRITICAL_SIZE) {
-			keybuffer.clear();
-			bone::log_error("Clear keybuffer due to reaching critical size");
-		}
-
-		BeginDrawing();
-		ClearBackground(GetColor(GuiGetStyle(DEFAULT, BACKGROUND_COLOR)));
-
-		DrawLine(-100, relative_height(-INFOBAR_SIZE), relative_width(100), relative_height(-INFOBAR_SIZE), WHITE);
-
-		float text_x = 10;
-		float text_y = relative_height(-INFOBAR_SIZE) + INFOBAR_FONT_SIZE / 1.75;
-		DrawTextEx(font, get_mode_string(), {text_x, text_y}, INFOBAR_FONT_SIZE, 0, WHITE);
-
-		EndDrawing();
+		_draw(font);
 	}
 
 	UnloadFont(font);
