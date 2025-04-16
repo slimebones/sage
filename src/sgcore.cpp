@@ -13,16 +13,40 @@ int current_buffer_index = 0;
 // referenced by index at any time during runtime.
 std::vector<Plugin*> PLUGINS;
 std::map<std::string, Command_Function> COMMANDS;
+std::unordered_map<int, std::string> SHIFT_KEYCODES = {
+	{KEY_A, "A"},
+	{KEY_B, "B"},
+	{KEY_C, "C"},
+	{KEY_D, "D"},
+	{KEY_E, "E"},
+	{KEY_F, "F"},
+	{KEY_G, "G"},
+	{KEY_H, "H"},
+	{KEY_I, "I"},
+	{KEY_J, "J"},
+	{KEY_K, "K"},
+	{KEY_L, "L"},
+	{KEY_M, "M"},
+	{KEY_N, "N"},
+	{KEY_O, "O"},
+	{KEY_P, "P"},
+	{KEY_Q, "Q"},
+	{KEY_R, "R"},
+	{KEY_S, "S"},
+	{KEY_T, "T"},
+	{KEY_U, "U"},
+	{KEY_V, "V"},
+	{KEY_W, "W"},
+	{KEY_X, "X"},
+	{KEY_Y, "Y"},
+	{KEY_Z, "Z"},
+	{KEY_SEMICOLON, ":"},
+};
 std::unordered_map<int, std::string> KEYCODES = {
 	{KEY_ENTER, "enter"},
 	{KEY_TAB, "tab"},
 	{KEY_LEFT_SHIFT, "lshift"},
 	{KEY_SPACE, "space"},
-	{KEY_APOSTROPHE, "apostrophe"},
-	{KEY_COMMA, "comma"},
-	{KEY_MINUS, "minus"},
-	{KEY_PERIOD, "period"},
-	{KEY_SLASH, "slash"},
 	{KEY_KP_0, "0"},
 	{KEY_KP_1, "1"},
 	{KEY_KP_2, "2"},
@@ -33,8 +57,6 @@ std::unordered_map<int, std::string> KEYCODES = {
 	{KEY_KP_7, "7"},
 	{KEY_KP_8, "8"},
 	{KEY_KP_9, "9"},
-	{KEY_SEMICOLON, "semicolon"},
-	{KEY_EQUAL, "equal"},
 	{KEY_A, "a"},
 	{KEY_B, "b"},
 	{KEY_C, "c"},
@@ -61,29 +83,6 @@ std::unordered_map<int, std::string> KEYCODES = {
 	{KEY_X, "x"},
 	{KEY_Y, "y"},
 	{KEY_Z, "z"},
-	{KEY_LEFT_BRACKET, "left bracket"},
-	{KEY_BACKSLASH, "backslash"},
-	{KEY_RIGHT_BRACKET, "right bracket"},
-	{KEY_GRAVE, "grave"},
-	{KEY_ESCAPE, "escape"},
-	{KEY_ENTER, "enter"},
-	{KEY_TAB, "tab"},
-	{KEY_BACKSPACE, "backspace"},
-	{KEY_INSERT, "insert"},
-	{KEY_DELETE, "delete"},
-	{KEY_RIGHT, "right"},
-	{KEY_LEFT, "left"},
-	{KEY_DOWN, "down"},
-	{KEY_UP, "up"},
-	{KEY_PAGE_UP, "page up"},
-	{KEY_PAGE_DOWN, "page down"},
-	{KEY_HOME, "home"},
-	{KEY_END, "end"},
-	{KEY_CAPS_LOCK, "caps lock"},
-	{KEY_SCROLL_LOCK, "scroll lock"},
-	{KEY_NUM_LOCK, "num lock"},
-	{KEY_PRINT_SCREEN, "print screen"},
-	{KEY_PAUSE, "pause"},
 	{KEY_F1, "f1"},
 	{KEY_F2, "f2"},
 	{KEY_F3, "f3"},
@@ -96,6 +95,7 @@ std::unordered_map<int, std::string> KEYCODES = {
 	{KEY_F10, "f10"},
 	{KEY_F11, "f11"},
 	{KEY_F12, "f12"},
+	{KEY_SEMICOLON, ";"},
 };
 
 int Buffer::set_mode(Buffer_Mode mode_) {
@@ -274,6 +274,13 @@ int init() {
 				} else {
 					std::string s(1, c);
 					auto keyvalue = map_find_by_value(KEYCODES, s, 0);
+					// Now try search shift combinations
+					if (keyvalue == 0) {
+						keyvalue = map_find_by_value(SHIFT_KEYCODES, s, 0);
+						if (keyvalue != 0) {
+							processed_keys.push_back(KEY_LEFT_SHIFT);
+						}
+					}
 					if (keyvalue != 0) {
 						processed_keys.push_back(keyvalue);
 					}
@@ -308,7 +315,14 @@ void print_rectangle(Rectangle rect) {
 }
 
 std::vector<int> keybuffer;
+// Keybuffer without control keys.
+std::vector<int> pure_keybuffer;
 #define KEYBUFFER_CRITICAL_SIZE 64
+
+void clear_keybuffer() {
+	keybuffer.clear();
+	pure_keybuffer.clear();
+}
 
 void print_vector_int(std::vector<int> v) {
 	printf("(");
@@ -324,27 +338,39 @@ void print_vector_int(std::vector<int> v) {
 	printf(")\n");
 }
 
+std::string find_matching_key(std::string group) {
+	for (const auto& keybinding_pair : KEYBINDINGS) {
+		auto parts = bone::split_string(keybinding_pair.first, '/');
+		auto keybinding_group = parts[0];
+		if (group == keybinding_group && keybinding_pair.second == keybuffer) {
+			return parts[1];
+		}
+	}
+	return "";
+}
+
 void _update(float delta) {
 	// Process keybuffer
-	switch (get_current_buffer()->get_mode()) {
-		case Buffer_Mode::NORMAL:
-			print_vector_int(keybuffer);
-			print_vector_int(KEYBINDINGS["en_insert/go_normal"]);
-			printf("----\n");
-			if (keybuffer == KEYBINDINGS["en_insert/go_normal"]) {
-				bone::log("YEAH");
+	if (keybuffer.size() > 0) {
+		std::string key;
+		switch (get_current_buffer()->get_mode()) {
+			case Buffer_Mode::NORMAL:
+				key = find_matching_key("en_normal");
+				if (key != "") {
+					bone::log(key);
+					keybuffer.clear();
+				}
+				break;
+			case Buffer_Mode::INSERT:
+				break;
+			case Buffer_Mode::VISUAL:
+				break;
+			case Buffer_Mode::COMMAND:
+				break;
+			default:
 				keybuffer.clear();
-			}
-			break;
-		case Buffer_Mode::INSERT:
-			break;
-		case Buffer_Mode::VISUAL:
-			break;
-		case Buffer_Mode::COMMAND:
-			break;
-		default:
-			keybuffer.clear();
-			break;
+				break;
+		}
 	}
 	if (keybuffer.size() >= KEYBUFFER_CRITICAL_SIZE) {
 		keybuffer.clear();
@@ -390,14 +416,36 @@ int loop() {
 		prev_time = current_time;
 		accumulator += delta_time;
 
-		// Gather pressed keys
+		// Gather pressed keys - not in general update to not lose them in-between
+		// our frames.
+		// For shift, ctrl, alt, we have a special logic: they always added in such
+		// order to the start of the keybuffer, if they are just pressed (not necessarily this frame).
+		std::vector<int> control_keybuffer;
+		// Order matters!
+		if (IsKeyPressed(KEY_LEFT_SHIFT)) {
+			control_keybuffer.push_back(KEY_LEFT_SHIFT);
+		}
+		if (IsKeyPressed(KEY_LEFT_CONTROL)) {
+			control_keybuffer.push_back(KEY_LEFT_CONTROL);
+		}
+		if (IsKeyPressed(KEY_LEFT_ALT)) {
+			control_keybuffer.push_back(KEY_LEFT_ALT);
+		}
+		// Collect pure keybuffer
 		while (true) {
 			auto k = GetKeyPressed();
-			if (k == 0) {
+			if (k == KEY_LEFT_SHIFT || k == KEY_LEFT_CONTROL || k == KEY_LEFT_ALT) {
+				continue;
+			}
+			if (k == 0)  {
 				break;
 			}
-			keybuffer.push_back(k);
+			pure_keybuffer.push_back(k);
 		}
+		// Finally, adjust our public keybuffer: place control keys before pure keys.
+		keybuffer.clear();
+		keybuffer.insert(keybuffer.begin(), control_keybuffer.begin(), control_keybuffer.end());
+		keybuffer.insert(keybuffer.end(), pure_keybuffer.begin(), pure_keybuffer.end());
 
 		// Update logic runs at a fixed interval
 		while (accumulator >= UPDATE_INTERVAL) {
