@@ -1,0 +1,1 @@
+// Home plugin - heart of the sgcore. Should always present.

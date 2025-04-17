@@ -4,15 +4,17 @@
 #undef RAYGUI_IMPLEMENTATION
 
 #include "raygui/styles/dark/style_dark.h"
+#include <cstdlib>
 
 namespace sgcore {
 
+using Command_Function = std::function<void(std::vector<std::string>)>;
 std::array<Buffer*, 256> BUFFERS;
 int current_buffer_index = 0;
 // Array of all initialized plugins. Their position is static, so they can be
 // referenced by index at any time during runtime.
 std::vector<Plugin*> PLUGINS;
-std::map<std::string, Command_Function> COMMANDS;
+std::unordered_map<std::string, Command_Function> BUILTIN_COMMANDS;
 std::unordered_map<int, std::string> SHIFT_KEYCODES = {
 	{KEY_A, "A"},
 	{KEY_B, "B"},
@@ -100,8 +102,8 @@ std::unordered_map<int, std::string> KEYCODES = {
 
 int Buffer::set_mode(Buffer_Mode mode_) {
 	mode = mode_;
-	if (plugin_id >= 0) {
-		PLUGINS[plugin_id]->on_mode_changed(mode_);
+	if (plugin != NULL) {
+		((Plugin*)plugin)->mode(this);
 	}
 	return OK;
 }
@@ -290,10 +292,10 @@ int init() {
 			}
 		}
 
-		// This should copy the vector to the map
 		if (processed_keys.size() > longest_keybinding_size) {
 			longest_keybinding_size = processed_keys.size();
 		}
+		// This should copy the vector to the map
 		KEYBINDINGS[target] = processed_keys;
 	}
 
@@ -301,7 +303,20 @@ int init() {
 	Buffer* home_buffer = new Buffer();
 	BUFFERS[0] = home_buffer;
 
+	// Initialize builtin commands
+	BUILTIN_COMMANDS["exit"] = cmd_exit;
+
 	return OK;
+}
+
+void load_plugin(Plugin* plugin) {
+	plugin->load();
+	plugin->enable();
+	PLUGINS.push_back(plugin);
+}
+
+void cmd_exit(std::vector<std::string> args) {
+	exit(0);
 }
 
 float relative_height(float value) {

@@ -26,8 +26,7 @@ public:
 	// for the buffer.
 	std::string* type = NULL;
 	std::vector<byte>* body = NULL;
-	// Id of buffer's active plugin. Set to -1 if no active plugin.
-	int plugin_id = -1;
+	void* plugin = NULL;
 
 	int set_mode(Buffer_Mode mode_);
 	Buffer_Mode get_mode();
@@ -38,14 +37,14 @@ private:
 
 class Plugin {
 public:
-	virtual int init() {}
+	virtual int load() {}
 	virtual int enable() {}
 	// When related buffer is opened.
 	virtual void open(Buffer* buffer) {}
 	// When related buffer is closed.
-	virtual void close() {}
+	virtual void close(Buffer* buffer) {}
 	virtual int disable() {}
-	virtual int deinit() {}
+	virtual int unload() {}
 
 	// Returns supported by plugin buffer types.
 	//
@@ -57,30 +56,22 @@ public:
 	virtual std::string& get_description() {}
 
 	// Drawing is only possible during active phase.
-	virtual void draw() {}
-	virtual void active_update() {}
-	virtual void passive_update() {}
+	virtual void draw(Buffer* buffer) {}
+	virtual void active_update(Buffer* buffer) {}
+	virtual void passive_update(Buffer* buffer) {}
 
 	// When for active for the plugin buffer the mode is changed.
-	virtual void mode(Buffer_Mode mode) {}
+	virtual void mode(Buffer* buffer) {}
 
 	// When a command is issued for the plugin: it is either in format
 	// `plugin_key.command_name` or `.command_name` for a related buffer.
-	//
-	// Note that `buffer` argument might not be a related buffer in case of
-	// `plugin_key.command_name` invocation: this always will be active buffer
-	// at the moment.
-	virtual void command(Buffer* active_buffer, const std::string& cmd) {}
+	// The buffer passed is always the current active buffer - may not be
+	// associated with the plugin.
+	virtual void command(Buffer* buffer, const std::string& cmd, std::vector<std::string> args) {}
 };
 
 int init();
 int loop();
-
-class Command_Context {
-public:
-};
-
-using Command_Function = std::function<int(Command_Context)>;
 
 char* get_mode_string();
 
