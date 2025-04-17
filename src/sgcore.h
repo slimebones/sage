@@ -7,6 +7,7 @@
 #include "ini.h"
 #include "common.h"
 #include "bone/bone.h"
+#include "signal.h"
 
 namespace sgcore {
 
@@ -39,6 +40,12 @@ class Plugin {
 public:
 	virtual int init() {}
 	virtual int enable() {}
+	// When related buffer is opened.
+	virtual void open(Buffer* buffer) {}
+	// When related buffer is closed.
+	virtual void close() {}
+	virtual int disable() {}
+	virtual int deinit() {}
 
 	// Returns supported by plugin buffer types.
 	//
@@ -49,32 +56,21 @@ public:
 	virtual std::string& get_name() {}
 	virtual std::string& get_description() {}
 
-	// For methods "on_*" we pass only target parameters, not any kind of context.
-	// Additional context can be requested by a plugin with special functions.
+	// Drawing is only possible during active phase.
+	virtual void draw() {}
+	virtual void active_update() {}
+	virtual void passive_update() {}
 
-	// When related buffer is opened.
-	virtual void on_buffer_opened(Buffer* buffer) {}
+	// When for active for the plugin buffer the mode is changed.
+	virtual void mode(Buffer_Mode mode) {}
 
-	// When related buffer is closed.
-	virtual void on_buffer_closed(Buffer* buffer) {}
-
-	// When related buffer change mode.
-	virtual void on_mode_changed(Buffer_Mode mode) {}
-
-	// When related buffer is focused.
-	virtual void on_focused(Buffer* buffer) {}
-
-	// When related buffer is unfocused.
-	virtual void on_unfocused(Buffer* buffer) {}
-
-	// When a command is issued for the plugin: it is either in format `plugin_key.command_name`
-	// or `.command_name` for related buffer.
+	// When a command is issued for the plugin: it is either in format
+	// `plugin_key.command_name` or `.command_name` for a related buffer.
 	//
-	// Note that `buffer` argument might not be a related buffer in case of `plugin_key.command_name` invocation.
-	virtual int on_command_entered(Buffer* buffer, const std::string& command) {}
-
-	virtual int disable() {}
-	virtual int deinit() {}
+	// Note that `buffer` argument might not be a related buffer in case of
+	// `plugin_key.command_name` invocation: this always will be active buffer
+	// at the moment.
+	virtual void command(Buffer* active_buffer, const std::string& cmd) {}
 };
 
 int init();

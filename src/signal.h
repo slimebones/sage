@@ -3,9 +3,10 @@
 #include <functional>
 #include <algorithm>
 
+template<typename T>
 class Signal {
 public:
-	using Slot = std::function<void(void*)>;
+	using Slot = std::function<void(T)>;
 
 	void connect(Slot slot) {
 		slots.push_back(slot);
@@ -16,12 +17,12 @@ public:
 			slots.begin(),
 			slots.end(),
 			[&slot](const Slot& s) {
-				return s.target<void(int)>() == slot.target<void(int)>();
+				return s.target<void(T)>() == slot.target<void(T)>();
 			}
 		), slots.end());
 	}
 
-	void emit(void* value) {
+	void emit(T value) {
 		for (const auto& slot : slots) {
 			slot(value);
 		}

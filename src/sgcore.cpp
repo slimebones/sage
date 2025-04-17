@@ -357,8 +357,34 @@ void _update(float delta) {
 		switch (get_current_buffer()->get_mode()) {
 			case Buffer_Mode::NORMAL:
 				key = find_matching_key("en_normal");
-				if (key != "") {
+				if (key == "go_insert_start") {
 					bone::log(key);
+					get_current_buffer()->set_mode(Buffer_Mode::INSERT);
+					clear_keybuffer();
+				}
+				if (key == "go_insert_end") {
+					bone::log(key);
+					get_current_buffer()->set_mode(Buffer_Mode::INSERT);
+					clear_keybuffer();
+				}
+				if (key == "go_insert_start_line") {
+					bone::log(key);
+					get_current_buffer()->set_mode(Buffer_Mode::INSERT);
+					clear_keybuffer();
+				}
+				if (key == "go_insert_end_line") {
+					bone::log(key);
+					get_current_buffer()->set_mode(Buffer_Mode::INSERT);
+					clear_keybuffer();
+				}
+				if (key == "go_command") {
+					bone::log(key);
+					get_current_buffer()->set_mode(Buffer_Mode::COMMAND);
+					clear_keybuffer();
+				}
+				if (key == "go_visual") {
+					bone::log(key);
+					get_current_buffer()->set_mode(Buffer_Mode::VISUAL);
 					clear_keybuffer();
 				}
 				break;
