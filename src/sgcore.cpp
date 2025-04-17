@@ -320,12 +320,9 @@ void print_rectangle(Rectangle rect) {
 }
 
 std::vector<int> keybuffer;
-// Keybuffer without control keys.
-std::vector<int> pure_keybuffer;
 
 void clear_keybuffer() {
 	keybuffer.clear();
-	pure_keybuffer.clear();
 }
 
 void print_vector_int(std::vector<int> v) {
@@ -381,15 +378,45 @@ void _update(float delta) {
 	}
 }
 
+template <typename T>
+std::string vector_to_string(const std::vector<T>& vec) {
+    std::ostringstream oss;
+    for (size_t i = 0; i < vec.size(); ++i) {
+        oss << vec[i];
+        if (i != vec.size() - 1) {
+            oss << ",";  // Add a comma after each element except the last one
+        }
+    }
+    return oss.str();
+}
+
 void _draw(Font font) {
 	BeginDrawing();
 	ClearBackground(GetColor(GuiGetStyle(DEFAULT, BACKGROUND_COLOR)));
 
 	DrawLine(-100, relative_height(-INFOBAR_SIZE), relative_width(100), relative_height(-INFOBAR_SIZE), WHITE);
 
+	// Draw mode
 	float text_x = 10;
 	float text_y = relative_height(-INFOBAR_SIZE) + INFOBAR_FONT_SIZE / 1.75;
 	DrawTextEx(font, get_mode_string(), {text_x, text_y}, INFOBAR_FONT_SIZE, 0, WHITE);
+
+	// Draw keybuffer
+	text_x = 300;
+	text_y = relative_height(-INFOBAR_SIZE) + INFOBAR_FONT_SIZE / 1.75;
+	std::vector<std::string> keybuffer_str;
+	for (auto k : keybuffer) {
+		auto it = KEYCODES.find(k);
+		if (it != KEYCODES.end()) {
+			keybuffer_str.push_back(it->second);
+		} else {
+			it = SHIFT_KEYCODES.find(k);
+			if (it != SHIFT_KEYCODES.end()) {
+				keybuffer_str.push_back(it->second);
+			}
+		}
+	}
+	DrawTextEx(font, vector_to_string(keybuffer_str).data(), {text_x, text_y}, INFOBAR_FONT_SIZE, 0, WHITE);
 
 	EndDrawing();
 }
@@ -421,20 +448,7 @@ int loop() {
 
 		// Gather pressed keys - not in general update to not lose them in-between
 		// our frames.
-		// For shift, ctrl, alt, we have a special logic: they always added in such
-		// order to the start of the keybuffer, if they are just pressed (not necessarily this frame).
 		std::vector<int> control_keybuffer;
-		// Order matters!
-		if (IsKeyDown(KEY_LEFT_SHIFT)) {
-			control_keybuffer.push_back(KEY_LEFT_SHIFT);
-		}
-		if (IsKeyDown(KEY_LEFT_CONTROL)) {
-			control_keybuffer.push_back(KEY_LEFT_CONTROL);
-		}
-		if (IsKeyDown(KEY_LEFT_ALT)) {
-			control_keybuffer.push_back(KEY_LEFT_ALT);
-		}
-		// Collect pure keybuffer
 		while (true) {
 			auto k = GetKeyPressed();
 			if (k == KEY_LEFT_SHIFT || k == KEY_LEFT_CONTROL || k == KEY_LEFT_ALT) {
@@ -443,12 +457,18 @@ int loop() {
 			if (k == 0)  {
 				break;
 			}
-			pure_keybuffer.push_back(k);
+			// Pressed controls are going with each key. Order matters!
+			if (IsKeyDown(KEY_LEFT_SHIFT)) {
+				keybuffer.push_back(KEY_LEFT_SHIFT);
+			}
+			if (IsKeyDown(KEY_LEFT_CONTROL)) {
+				keybuffer.push_back(KEY_LEFT_CONTROL);
+			}
+			if (IsKeyDown(KEY_LEFT_ALT)) {
+				keybuffer.push_back(KEY_LEFT_ALT);
+			}
+			keybuffer.push_back(k);
 		}
-		// Finally, adjust our public keybuffer: place control keys before pure keys.
-		keybuffer.clear();
-		keybuffer.insert(keybuffer.begin(), control_keybuffer.begin(), control_keybuffer.end());
-		keybuffer.insert(keybuffer.end(), pure_keybuffer.begin(), pure_keybuffer.end());
 
 		// Update logic runs at a fixed interval
 		while (accumulator >= UPDATE_INTERVAL) {
