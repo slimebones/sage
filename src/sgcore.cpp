@@ -466,6 +466,8 @@ void _draw(Font font) {
 const float UPDATE_INTERVAL = 1.0f / TARGET_FPS;
 
 int loop() {
+    printf("Current time: %d, Current date: %s", bone::time(), bone::date(bone::time(), null));
+
     SetTraceLogLevel(LOG_WARNING);
     SetConfigFlags(FLAG_WINDOW_RESIZABLE);
     InitWindow(800, 450, "Sage");
@@ -524,6 +526,11 @@ int loop() {
     CloseWindow();
 
     return OK;
+}
+
+// Return engine time in milliseconds. Engine time is the time passed since the window was created.
+int engine_time() {
+    return (int)(GetTime() * 1000);
 }
 
 char* get_mode_string() {

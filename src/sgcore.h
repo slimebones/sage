@@ -5,11 +5,13 @@
 #include <array>
 #include "raylib/raylib.h"
 #include "ini.h"
-#include "common.h"
 #include "bone/bone.h"
 #include "signal.h"
 
 namespace sgcore {
+
+int OK = 0;
+int ERROR = 1;
 
 enum Buffer_Mode {
     NORMAL,
@@ -48,8 +50,7 @@ public:
 
     // Returns supported by plugin buffer types.
     //
-    // For each buffer, the first plugin that supports the buffer's type will
-    // receive events for the buffer, and will be able to modify buffer's state.
+    // For each buffer, the first plugin that supports the buffer's type will receive events for the buffer, and will be able to modify buffer's state.
     virtual std::array<std::string&, 64>* get_types() {}
     virtual std::string& get_key() {}
     virtual std::string& get_name() {}
@@ -78,4 +79,6 @@ char* get_mode_string();
 int call_command(const std::string& command);
 
 void cmd_exit(std::vector<std::string> args);
+
+int engine_time();
 }
