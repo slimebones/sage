@@ -77,4 +77,5 @@ char* get_mode_string();
 
 int call_command(const std::string& command);
 
+void cmd_exit(std::vector<std::string> args);
 }
