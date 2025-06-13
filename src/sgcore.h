@@ -76,9 +76,9 @@ int loop();
 
 char* get_mode_string();
 
-int call_command(const std::string& command);
+int call_command(const char* command);
 
-void cmd_exit(std::vector<std::string> args);
+void command_exit(std::vector<const char*> args);
 
 int engine_time();
 }

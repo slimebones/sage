@@ -276,7 +276,8 @@ int init() {
                 if (bracket_opened) {
                     bracket_chars.push_back(c);
                 } else {
-                    const char* s(1, c);
+                    std::string s_str(1, c);
+                    const char* s = s_str.c_str();
                     auto keyvalue = map_find_by_value(KEYCODES, s, 0);
                     // Now try search shift combinations
                     if (keyvalue == 0) {
@@ -304,7 +305,8 @@ int init() {
     BUFFERS[0] = home_buffer;
 
     // Initialize builtin commands
-    BUILTIN_COMMANDS["exit"] = cmd_exit;
+    const char* exit = "exit";
+    BUILTIN_COMMANDS[exit] = command_exit;
 
     return OK;
 }
@@ -315,7 +317,7 @@ void load_plugin(Plugin* plugin) {
     PLUGINS.push_back(plugin);
 }
 
-void cmd_exit(std::vector<const char*> args) {
+void command_exit(std::vector<const char*> args) {
     exit(0);
 }
 
@@ -428,7 +430,7 @@ const char* vector_to_string(const std::vector<T>& vec) {
             oss << ",";  // Add a comma after each element except the last one
         }
     }
-    return oss.str();
+    return oss.str().c_str();
 }
 
 void _draw(Font font) {
@@ -457,7 +459,7 @@ void _draw(Font font) {
             }
         }
     }
-    DrawTextEx(font, vector_to_string(keybuffer_str).data(), {text_x, text_y}, INFOBAR_FONT_SIZE, 0, WHITE);
+    DrawTextEx(font, vector_to_string(keybuffer_str), {text_x, text_y}, INFOBAR_FONT_SIZE, 0, WHITE);
 
     EndDrawing();
 }
@@ -549,7 +551,8 @@ char* get_mode_string() {
     }
 }
 
-int call_command(const const char*& command) {
+int call_command(const char* command) {
     return OK;
 }
+
 }
