@@ -8,6 +8,9 @@
 
 namespace sgcore {
 
+int OK = 0;
+int ERROR = 1;
+
 using Command_Function = std::function<void(std::vector<const char*>)>;
 std::array<Buffer*, 256> BUFFERS;
 int current_buffer_index = 0;
@@ -468,7 +471,7 @@ void _draw(Font font) {
 const float UPDATE_INTERVAL = 1.0f / TARGET_FPS;
 
 int loop() {
-    printf("Current time: %d, Current date: %s", bone::time(), bone::date(bone::time(), null));
+    printf("Current time: %lld, Current date: %s", bone::time(), bone::date(bone::time(), null));
 
     SetTraceLogLevel(LOG_WARNING);
     SetConfigFlags(FLAG_WINDOW_RESIZABLE);

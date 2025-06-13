@@ -68,7 +68,7 @@ int init(const char* project_name_) {
         panic("OK code should be 0.");
     }
     auto error = code("ERROR");
-    if (error != 0) {
+    if (error != 1) {
         panic("ERROR code should be 1.");
     }
     return 0;
@@ -141,7 +141,7 @@ const char* codename(int code) {
     return "*unknown code*";
 }
 
-const char* date(int t, const char* f) {
+const char* date(int64_t t, const char* f) {
     // Static buffer to hold the formatted date and time
     static char buffer[100];
 

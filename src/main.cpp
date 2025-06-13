@@ -2,12 +2,12 @@
 
 int main() {
     int e = bone::init("sage");
-    if (e != OK) {
+    if (e != 0) {
         return e;
     }
 
     e = sgcore::init();
-    if (e != OK) {
+    if (e != 0) {
         return e;
     }
 

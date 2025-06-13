@@ -10,9 +10,6 @@
 
 namespace sgcore {
 
-int OK = 0;
-int ERROR = 1;
-
 enum Buffer_Mode {
     NORMAL,
     INSERT,
