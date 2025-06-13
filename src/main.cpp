@@ -1,4 +1,3 @@
-#include "common.h"
 #include "sgcore.h"
 
 int main() {
