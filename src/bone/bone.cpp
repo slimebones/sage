@@ -7,15 +7,15 @@
 
 namespace bone {
 
-std::string project_name = "";
+const char* project_name = "";
 
 void log(const char* message) {
     std::cout << message << std::endl;
 }
 
 void log_error(const char* message) {
-    const std::string RED = "\033[31m";
-    const std::string RESET = "\033[0m";
+    const const char* RED = "\033[31m";
+    const const char* RESET = "\033[0m";
     std::cout << RED << "ERROR" << RESET << ": " << message << std::endl;
 }
 
@@ -29,24 +29,24 @@ std::filesystem::path userdir(std::filesystem::path p) {
     if (SHGetFolderPathA(NULL, CSIDL_APPDATA, NULL, 0, appdata_arr) != S_OK) {
         return "";
     }
-    std::string path = std::string(appdata_arr) + "\\" + project_name;
+    const char* path = (std::string(appdata_arr) + "\\" + std::string(project_name)).c_str();
     return (path / p);
 };
 
-char* concatenate_strings(char** strings, int count) {
-    // Calculate total length for the new string
+const char* concatenate_strings(const char** s, int count) {
+    // Calculate total length for the new const char*
     size_t total_length = 0;
     for (int i = 0; i < count; ++i) {
-        total_length += strlen(strings[i]);
+        total_length += strlen(s[i]);
     }
 
     // Allocate memory for the concatenated string
     char* result = new char[total_length + 1]; // +1 for null terminator
     result[0] = '\0'; // Initialize to empty string
 
-    // Concatenate each string
+    // Concatenate each const char*
     for (int i = 0; i < count; ++i) {
-        strcat(result, strings[i]);
+        strcat(result, s[i]);
     }
 
     return result;
@@ -55,13 +55,13 @@ char* concatenate_strings(char** strings, int count) {
 void panic(const char* message) {
     const char* RED = "\033[31m";
     const char* RESET = "\033[0m";
-    char* strings[] = {RED, "PANIC", RESET, ": ", message};
-    const char* final_message = concatenate_strings(strings);
-    std::cout << final_message << std:endl;
+    const char* s[] = {RED, "PANIC", RESET, ": ", message};
+    const char* final_message = concatenate_strings(s, 5);
+    std::cout << final_message << std::endl;
     throw std::runtime_error(final_message);
 }
 
-int init(std::string project_name_) {
+int init(const char* project_name_) {
     project_name = project_name_;
     auto ok = code("OK");
     if (ok != 0) {
@@ -74,39 +74,39 @@ int init(std::string project_name_) {
     return 0;
 }
 
-std::vector<std::string> split_string(const std::string& str, char delimiter) {
-    std::vector<std::string> tokens;
-    std::stringstream ss(str);
+std::vector<const char*> split_string(const char* s, char delimiter) {
+    std::vector<const char*> tokens;
+    std::stringstream ss(s);
     std::string token;
 
     while (std::getline(ss, token, delimiter)) {
-        tokens.push_back(token);
+        tokens.push_back(token.c_str());
     }
 
     return tokens;
 }
 
-std::string format(const char* f, ...) {
+const char* format(const char* f, ...) {
     // Create a variable argument list
     va_list args;
     va_start(args, f);
 
-    // Create a string stream
+    // Create a const char* stream
     std::ostringstream oss;
 
-    // Use vsnprintf to format the string into a buffer
+    // Use vsnprintf to format the const char* into a buffer
     const int bufferSize = 1024; // Adjust size as needed
     char buffer[bufferSize];
     vsnprintf(buffer, bufferSize, f, args);
 
-    // Append the formatted string to the string stream
+    // Append the formatted const char* to the const char* stream
     oss << buffer;
 
     // Clean up
     va_end(args);
 
-    // Return the formatted string
-    return oss.str();
+    // Return the formatted const char*
+    return oss.str().c_str();
 }
 
 int64_t time() {

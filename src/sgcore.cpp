@@ -8,14 +8,14 @@
 
 namespace sgcore {
 
-using Command_Function = std::function<void(std::vector<std::string>)>;
+using Command_Function = std::function<void(std::vector<const char*>)>;
 std::array<Buffer*, 256> BUFFERS;
 int current_buffer_index = 0;
 // Array of all initialized plugins. Their position is static, so they can be
 // referenced by index at any time during runtime.
 std::vector<Plugin*> PLUGINS;
-std::unordered_map<std::string, Command_Function> BUILTIN_COMMANDS;
-std::unordered_map<int, std::string> SHIFT_KEYCODES = {
+std::unordered_map<const char*, Command_Function> BUILTIN_COMMANDS;
+std::unordered_map<int, const char*> SHIFT_KEYCODES = {
     {KEY_A, "A"},
     {KEY_B, "B"},
     {KEY_C, "C"},
@@ -44,7 +44,7 @@ std::unordered_map<int, std::string> SHIFT_KEYCODES = {
     {KEY_Z, "Z"},
     {KEY_SEMICOLON, ":"},
 };
-std::unordered_map<int, std::string> KEYCODES = {
+std::unordered_map<int, const char*> KEYCODES = {
     {KEY_ENTER, "enter"},
     {KEY_TAB, "tab"},
     {KEY_LEFT_SHIFT, "lshift"},
@@ -117,10 +117,10 @@ Buffer_Mode Buffer::get_mode() {
 }
 
 mINI::INIStructure raw_keybindings;
-std::map<std::string, std::vector<int>> KEYBINDINGS;
+std::map<const char*, std::vector<int>> KEYBINDINGS;
 #define KEY_DELAY = 100
 
-std::string KEYBINDINGS_TARGETS[] = {
+const char* KEYBINDINGS_TARGETS[] = {
     "en_normal/go_insert_start",
     "en_normal/go_insert_end",
     "en_normal/go_insert_start_line",
@@ -259,7 +259,7 @@ int init() {
                         processed_keys.clear();
                         break;
                     }
-                    std::string bracket_string(bracket_chars.begin(), bracket_chars.end());
+                    const char* bracket_string = bracket_chars.data();
                     auto keyvalue = map_find_by_value(KEYCODES, bracket_string, 0);
                     bracket_opened = false;
                     if (keyvalue != 0) {
@@ -276,7 +276,7 @@ int init() {
                 if (bracket_opened) {
                     bracket_chars.push_back(c);
                 } else {
-                    std::string s(1, c);
+                    const char* s(1, c);
                     auto keyvalue = map_find_by_value(KEYCODES, s, 0);
                     // Now try search shift combinations
                     if (keyvalue == 0) {
@@ -315,7 +315,7 @@ void load_plugin(Plugin* plugin) {
     PLUGINS.push_back(plugin);
 }
 
-void cmd_exit(std::vector<std::string> args) {
+void cmd_exit(std::vector<const char*> args) {
     exit(0);
 }
 
@@ -354,7 +354,7 @@ void print_vector_int(std::vector<int> v) {
     printf(")\n");
 }
 
-std::string find_matching_key(std::string group) {
+const char* find_matching_key(const char* group) {
     for (const auto& keybinding_pair : KEYBINDINGS) {
         auto parts = bone::split_string(keybinding_pair.first, '/');
         auto keybinding_group = parts[0];
@@ -368,7 +368,7 @@ std::string find_matching_key(std::string group) {
 void _update(float delta) {
     // Process keybuffer
     if (keybuffer.size() > 0) {
-        std::string key;
+        const char* key;
         switch (get_current_buffer()->get_mode()) {
             case Buffer_Mode::NORMAL:
                 key = find_matching_key("en_normal");
@@ -420,7 +420,7 @@ void _update(float delta) {
 }
 
 template <typename T>
-std::string vector_to_string(const std::vector<T>& vec) {
+const char* vector_to_string(const std::vector<T>& vec) {
     std::ostringstream oss;
     for (size_t i = 0; i < vec.size(); ++i) {
         oss << vec[i];
@@ -445,7 +445,7 @@ void _draw(Font font) {
     // Draw keybuffer
     text_x = 300;
     text_y = relative_height(-INFOBAR_SIZE) + INFOBAR_FONT_SIZE / 1.75;
-    std::vector<std::string> keybuffer_str;
+    std::vector<const char*> keybuffer_str;
     for (auto k : keybuffer) {
         auto it = KEYCODES.find(k);
         if (it != KEYCODES.end()) {
@@ -549,7 +549,7 @@ char* get_mode_string() {
     }
 }
 
-int call_command(const std::string& command) {
+int call_command(const const char*& command) {
     return OK;
 }
 }
