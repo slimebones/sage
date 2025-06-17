@@ -13,7 +13,7 @@ void log(const char* message) {
     std::time_t now = std::time(null);
     std::tm* localtime = std::localtime(&now);
     char buffer[30];
-    std::strftime(buffer, sizeof(buffer), "[%Y-%m-%d %H:%M %z]", localtime);
+    std::strftime(buffer, sizeof(buffer), "[%Y-%m-%d %H:%M:%S %z]", localtime);
 
     std::cout << buffer << " " << message << std::endl;
 }
@@ -22,7 +22,7 @@ void log_error(const char* message) {
     std::time_t now = std::time(null);
     std::tm* localtime = std::localtime(&now);
     char buffer[30];
-    std::strftime(buffer, sizeof(buffer), "[%Y-%m-%d %H:%M %z]", localtime);
+    std::strftime(buffer, sizeof(buffer), "[%Y-%m-%d %H:%M:%S %z]", localtime);
 
     const const char* RED = "\033[31m";
     const const char* RESET = "\033[0m";

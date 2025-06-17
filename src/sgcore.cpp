@@ -268,7 +268,7 @@ int init() {
                     if (keyvalue != 0) {
                         processed_keys.push_back(keyvalue);
                     } else {
-                        bone::log_error(bone::format("During keybindings processing, unrecognized bracket command: '%s'", bracket_string));
+                        bone::log_error(bone::format("During keybindings processing, unrecognized bracket command: '%s'.", bracket_string));
                         bracket_chars.clear();
                         break;
                     }
@@ -360,6 +360,7 @@ void print_vector_int(std::vector<int> v) {
 }
 
 const char* find_matching_key(const char* group) {
+    bone::log(group);
     for (const auto& keybinding_pair : KEYBINDINGS) {
         auto parts = bone::split_string(keybinding_pair.first, '/');
         auto keybinding_group = parts[0];
@@ -371,7 +372,7 @@ const char* find_matching_key(const char* group) {
 }
 
 void _update(float delta) {
-    // Process keybuffer
+    // Process keybuffer.
     if (keybuffer.size() > 0) {
         const char* key;
         switch (get_current_buffer()->get_mode()) {
@@ -471,10 +472,6 @@ void _draw(Font font) {
 const float UPDATE_INTERVAL = 1.0f / TARGET_FPS;
 
 int loop() {
-    char buffer[100];
-    sprintf(buffer, "Current time: %lld, Current date: %s", bone::time(), bone::date(bone::time(), null));
-    bone::log_error(buffer);
-
     SetTraceLogLevel(LOG_WARNING);
     SetConfigFlags(FLAG_WINDOW_RESIZABLE);
     InitWindow(800, 450, "Sage");
