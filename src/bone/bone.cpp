@@ -10,13 +10,23 @@ namespace bone {
 const char* project_name = "";
 
 void log(const char* message) {
-    std::cout << message << std::endl;
+    std::time_t now = std::time(null);
+    std::tm* localtime = std::localtime(&now);
+    char buffer[30];
+    std::strftime(buffer, sizeof(buffer), "[%Y-%m-%d %H:%M %z]", localtime);
+
+    std::cout << buffer << " " << message << std::endl;
 }
 
 void log_error(const char* message) {
+    std::time_t now = std::time(null);
+    std::tm* localtime = std::localtime(&now);
+    char buffer[30];
+    std::strftime(buffer, sizeof(buffer), "[%Y-%m-%d %H:%M %z]", localtime);
+
     const const char* RED = "\033[31m";
     const const char* RESET = "\033[0m";
-    std::cout << RED << "ERROR" << RESET << ": " << message << std::endl;
+    std::cout << buffer << " " << RED << "ERROR" << RESET << ": " << message << std::endl;
 }
 
 std::filesystem::path cwd(std::filesystem::path p) {

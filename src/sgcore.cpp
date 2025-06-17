@@ -471,7 +471,9 @@ void _draw(Font font) {
 const float UPDATE_INTERVAL = 1.0f / TARGET_FPS;
 
 int loop() {
-    printf("Current time: %lld, Current date: %s", bone::time(), bone::date(bone::time(), null));
+    char buffer[100];
+    sprintf(buffer, "Current time: %lld, Current date: %s", bone::time(), bone::date(bone::time(), null));
+    bone::log_error(buffer);
 
     SetTraceLogLevel(LOG_WARNING);
     SetConfigFlags(FLAG_WINDOW_RESIZABLE);
