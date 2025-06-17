@@ -78,4 +78,5 @@ int call_command(const char* command);
 void command_exit(std::vector<const char*> args);
 
 int engine_time();
+void print_vector_int(std::vector<int> v);
 }

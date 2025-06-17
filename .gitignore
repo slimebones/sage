@@ -1,6 +1,5 @@
 .env
 build/
-var/
 .zig-cache/
 zig-out/
 *.o
@@ -10,3 +9,4 @@ zig-out/
 *.tmp
 *.bak
 .vs/
+out/

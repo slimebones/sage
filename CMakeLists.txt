@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 4.0)
+cmake_minimum_required(VERSION 3.0)
 project(sage)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -35,3 +35,12 @@ foreach(DLL ${DLLS})
         "${DLL}" "$<TARGET_FILE_DIR:sage>"
     )
 endforeach()
+
+# Copy resources to binary folder.
+set(RESOURCE_FOLDER ${CMAKE_SOURCE_DIR}/res)
+add_custom_command(
+    TARGET sage POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${RESOURCE_FOLDER}
+        $<TARGET_FILE_DIR:sage>/res
+)

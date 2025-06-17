@@ -299,6 +299,9 @@ int init() {
         if (processed_keys.size() > longest_keybinding_size) {
             longest_keybinding_size = processed_keys.size();
         }
+        bone::log(target);
+        bone::log(bone::format("%d", processed_keys.size()));
+        print_vector_int(processed_keys);
         // This should copy the vector to the map
         KEYBINDINGS[target] = processed_keys;
     }
@@ -360,7 +363,6 @@ void print_vector_int(std::vector<int> v) {
 }
 
 const char* find_matching_key(const char* group) {
-    bone::log(group);
     for (const auto& keybinding_pair : KEYBINDINGS) {
         auto parts = bone::split_string(keybinding_pair.first, '/');
         auto keybinding_group = parts[0];
@@ -478,9 +480,10 @@ int loop() {
     SetExitKey(0);
     GuiLoadStyleDark();
 
-    Font font = LoadFont("src/inconsolata/variable.ttf");
+    bone::log(bone::cwd("").string().c_str());
+    Font font = LoadFont("res/inconsolata/variable.ttf");
 
-    Image icon = LoadImage("src/icon.png");
+    Image icon = LoadImage("res/icon.png");
     SetWindowIcon(icon);
     UnloadImage(icon);
 

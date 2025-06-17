@@ -97,26 +97,20 @@ std::vector<const char*> split_string(const char* s, char delimiter) {
 }
 
 const char* format(const char* f, ...) {
-    // Create a variable argument list
+    // Define a static buffer to hold the formatted string
+    static char buffer[1024]; // Adjust size as needed
+
+    // Initialize the variable argument list
     va_list args;
     va_start(args, f);
 
-    // Create a const char* stream
-    std::ostringstream oss;
+    // Format the string into the buffer
+    std::vsnprintf(buffer, sizeof(buffer), f, args);
 
-    // Use vsnprintf to format the const char* into a buffer
-    const int bufferSize = 1024; // Adjust size as needed
-    char buffer[bufferSize];
-    vsnprintf(buffer, bufferSize, f, args);
-
-    // Append the formatted const char* to the const char* stream
-    oss << buffer;
-
-    // Clean up
+    // Clean up the variable argument list
     va_end(args);
 
-    // Return the formatted const char*
-    return oss.str().c_str();
+    return buffer; // Return the formatted string
 }
 
 int64_t time() {
